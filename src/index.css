@@ -14,7 +14,38 @@
 }
 
 @layer base {
+  :root {
+    --cursor-interactive: url('/cursor-click.svg') 8 6, pointer;
+  }
+
   body {
     @apply bg-cream text-text antialiased font-sans;
+  }
+
+  a,
+  button,
+  summary,
+  [role='button'],
+  [role='link'],
+  input[type='button'],
+  input[type='submit'],
+  input[type='reset'],
+  input[type='checkbox'],
+  input[type='radio'],
+  input[type='file'],
+  input:not([type='hidden']),
+  textarea,
+  select,
+  label[for],
+  [tabindex]:not([tabindex='-1']) {
+    cursor: var(--cursor-interactive);
+  }
+
+  button:disabled,
+  input:disabled,
+  textarea:disabled,
+  select:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
   }
 }
