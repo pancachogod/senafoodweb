@@ -10,6 +10,35 @@ def normalize_database_url(url: str) -> str:
     return url
 
 
+def normalize_origin(origin: str) -> str:
+    origin = origin.strip()
+    if not origin:
+        return ""
+    if origin == "*":
+        return origin
+    if origin.endswith("/"):
+        origin = origin[:-1]
+    if origin.startswith("http://") or origin.startswith("https://"):
+        return origin
+    if origin.startswith("localhost") or origin.startswith("127.0.0.1"):
+        return f"http://{origin}"
+    return f"https://{origin}"
+
+
+def parse_cors_origins(raw: str) -> list[str]:
+    if not raw:
+        return []
+    origins: list[str] = []
+    for item in raw.split(","):
+        origin = normalize_origin(item)
+        if not origin:
+            continue
+        if origin == "*":
+            return ["*"]
+        origins.append(origin)
+    return origins
+
+
 class Settings:
     def __init__(self) -> None:
         raw_url = os.getenv(
@@ -23,9 +52,7 @@ class Settings:
             os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440")
         )
         cors_env = os.getenv("CORS_ORIGINS", "")
-        self.cors_origins = [
-            origin.strip() for origin in cors_env.split(",") if origin.strip()
-        ]
+        self.cors_origins = parse_cors_origins(cors_env)
         self.env = os.getenv("ENV", "dev")
 
 
