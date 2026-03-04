@@ -4,6 +4,7 @@ import CartDrawer from '../components/CartDrawer.jsx';
 import { cart, logo, profile } from '../assets/index.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useOrders } from '../context/OrdersContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const formatCop = (value) => {
   return new Intl.NumberFormat('es-CO', {
@@ -47,12 +48,14 @@ const formatTime = (value) => {
 export default function Orders() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { orders, cancelOrder } = useOrders();
+  const { orders, cancelOrder, isLoading, error } = useOrders();
   const { items, itemCount, total, increaseItem, decreaseItem, removeItem } = useCart();
+  const { isAuthenticated } = useAuth();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [openOrderId, setOpenOrderId] = useState(null);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState(null);
+  const [cancelError, setCancelError] = useState('');
 
   const sortedOrders = useMemo(() => {
     return [...orders].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -76,12 +79,18 @@ export default function Orders() {
   const handleCloseCancel = () => {
     setIsCancelOpen(false);
     setOrderToCancel(null);
+    setCancelError('');
   };
 
-  const handleConfirmCancel = () => {
+  const handleConfirmCancel = async () => {
     if (!orderToCancel?.id) return;
-    cancelOrder(orderToCancel.id);
-    handleCloseCancel();
+    setCancelError('');
+    try {
+      await cancelOrder(orderToCancel.id);
+      handleCloseCancel();
+    } catch (error) {
+      setCancelError(error?.message || 'No se pudo cancelar el pedido.');
+    }
   };
 
   const handleCopy = async (value) => {
@@ -181,7 +190,30 @@ export default function Orders() {
           </div>
 
           <div className="mt-6 space-y-4">
-            {hasOrders ? (
+            {!isAuthenticated ? (
+              <div className="rounded-[18px] border border-dashed border-[#eadfd5] bg-white px-6 py-8 text-center shadow-soft">
+                <p className="text-[12px] font-semibold text-title">Inicia sesión para ver tus pedidos</p>
+                <p className="mt-2 text-[11px] text-muted">
+                  Accede con tu cuenta para consultar el historial y tus tokens.
+                </p>
+                <button
+                  className="mt-4 rounded-full bg-orange px-4 py-2 text-[11px] font-semibold text-white"
+                  type="button"
+                  onClick={() => navigate('/login')}
+                >
+                  Ir a iniciar sesión
+                </button>
+              </div>
+            ) : isLoading ? (
+              <div className="rounded-[18px] border border-dashed border-[#eadfd5] bg-white px-6 py-8 text-center shadow-soft">
+                <p className="text-[12px] font-semibold text-title">Cargando pedidos...</p>
+              </div>
+            ) : error ? (
+              <div className="rounded-[18px] border border-dashed border-[#eadfd5] bg-white px-6 py-8 text-center shadow-soft">
+                <p className="text-[12px] font-semibold text-title">No se pudieron cargar los pedidos</p>
+                <p className="mt-2 text-[11px] text-muted">{error}</p>
+              </div>
+            ) : hasOrders ? (
               sortedOrders.map((order) => {
                 const isOpen = openOrderId === order.id;
                 const isCancelled = order.status === 'Cancelado';
@@ -260,7 +292,7 @@ export default function Orders() {
                                 >
                                   <img
                                     className="h-12 w-14 rounded-[12px] object-cover"
-                                    src={item.image}
+                                    src={item.image || logo}
                                     alt={item.name}
                                   />
                                   <div className="flex-1">
@@ -328,7 +360,7 @@ export default function Orders() {
                                     >
                                       <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none">
                                         <path
-                                          d="M2.5 10s3-5 7.5-5 7.5 5 7.5 5-3 5-7.5 5-7.5-5-7.5-5Z"
+                                          d="M2.5 10s3-5 7.5-5 7.5 5 7.5 5-3 5-7.5-5-7.5-5Z"
                                           stroke="currentColor"
                                           strokeWidth="1.4"
                                         />
@@ -429,6 +461,9 @@ export default function Orders() {
                 Si, cancelar pedido
               </button>
             </div>
+            {cancelError ? (
+              <p className="mt-3 text-[10px] text-[#e24c3b]">{cancelError}</p>
+            ) : null}
           </div>
         </div>
       ) : null}

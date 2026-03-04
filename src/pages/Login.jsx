@@ -4,21 +4,32 @@ import AuthLayout from '../components/AuthLayout.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
 import TextInput from '../components/TextInput.jsx';
 import { logo } from '../assets/index.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!email || !password) {
       setError('Completa todos los campos.');
       return;
     }
     setError('');
-    navigate('/home');
+    setIsSubmitting(true);
+    try {
+      await login(email, password);
+      navigate('/home');
+    } catch (err) {
+      setError(err?.message || 'No se pudo iniciar sesión.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -51,7 +62,9 @@ export default function Login() {
             <span>{error}</span>
           </div>
         ) : null}
-        <PrimaryButton type="submit">INICIAR SESIÓN</PrimaryButton>
+        <PrimaryButton type="submit" disabled={isSubmitting}>
+          {isSubmitting ? 'INGRESANDO...' : 'INICIAR SESIÓN'}
+        </PrimaryButton>
       </form>
       <div className="mt-2 flex items-center gap-1 text-[11px] text-text">
         <span>¿no tienes cuenta?</span>

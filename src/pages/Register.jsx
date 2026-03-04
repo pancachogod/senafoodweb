@@ -5,6 +5,7 @@ import Checkbox from '../components/Checkbox.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
 import TextInput from '../components/TextInput.jsx';
 import { logo } from '../assets/index.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 const nameRegex = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/;
 
@@ -15,6 +16,7 @@ const isValidPassword = (value) => value.length >= 6 && /[A-Z]/.test(value);
 
 export default function Register() {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [document, setDocument] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -23,8 +25,9 @@ export default function Register() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     if (!document || !name || !phone || !email || !password) {
       setError('Completa todos los campos.');
@@ -47,7 +50,21 @@ export default function Register() {
       return;
     }
     setError('');
-    navigate('/home');
+    setIsSubmitting(true);
+    try {
+      await register({
+        name: name.trim(),
+        email,
+        phone,
+        document,
+        password,
+      });
+      navigate('/home');
+    } catch (err) {
+      setError(err?.message || 'No se pudo crear la cuenta.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -109,8 +126,8 @@ export default function Register() {
         {error ? (
           <div className="text-center text-[11px] text-[#e24c3b]">{error}</div>
         ) : null}
-        <PrimaryButton type="submit" disabled={!acceptedTerms}>
-          REGISTRARME
+        <PrimaryButton type="submit" disabled={!acceptedTerms || isSubmitting}>
+          {isSubmitting ? 'REGISTRANDO...' : 'REGISTRARME'}
         </PrimaryButton>
       </form>
       <Link className="mt-2 text-[12px] uppercase tracking-[0.4px] text-[#e75a1a]" to="/login">

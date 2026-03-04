@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { cart, logo, profile } from '../assets/index.js';
 import CartDrawer from '../components/CartDrawer.jsx';
 import { useCart } from '../context/CartContext.jsx';
+import { fetchProducts, fallbackProducts } from '../api/products.js';
 import { menuBenefits, menuItems } from '../data/menu.js';
 
 const formatCop = (value) => {
@@ -16,8 +17,16 @@ const formatCop = (value) => {
 export default function MenuItem() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const product = menuItems.find((item) => item.id === id) ?? menuItems[0];
-  const gallery = product?.detail?.gallery?.length ? product.detail.gallery : [product.image];
+  const [products, setProducts] = useState(menuItems);
+  const product =
+    products.find((item) => String(item.id) === id || item.code === id) ??
+    menuItems.find((item) => item.id === id) ??
+    menuItems[0];
+  const gallery = product?.detail?.gallery?.length
+    ? product.detail.gallery
+    : product?.image
+      ? [product.image]
+      : [];
   const [selectedImage, setSelectedImage] = useState(gallery[0]);
   const [quantity, setQuantity] = useState(1);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -27,6 +36,22 @@ export default function MenuItem() {
     setSelectedImage(gallery[0]);
     setQuantity(1);
   }, [gallery]);
+
+  useEffect(() => {
+    let isActive = true;
+    fetchProducts()
+      .then((data) => {
+        if (!isActive) return;
+        setProducts(data.length ? data : fallbackProducts());
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setProducts(fallbackProducts());
+      });
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -115,11 +140,13 @@ export default function MenuItem() {
             <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[1.05fr_0.95fr]">
               <div>
                 <div className="overflow-hidden rounded-[22px] border-[6px] border-white shadow-[0_18px_36px_rgba(0,0,0,0.18)]">
-                  <img
-                    className="h-[300px] w-full object-cover sm:h-[340px]"
-                    src={selectedImage}
-                    alt={product?.name}
-                  />
+                  {selectedImage ? (
+                    <img
+                      className="h-[300px] w-full object-cover sm:h-[340px]"
+                      src={selectedImage}
+                      alt={product?.name}
+                    />
+                  ) : null}
                 </div>
                 <div className="mt-4 flex flex-wrap gap-3">
                   {gallery.map((image, index) => {

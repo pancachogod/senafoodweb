@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CartDrawer from '../components/CartDrawer.jsx';
 import { cart, logo, profile as profileIcon } from '../assets/index.js';
 import { useCart } from '../context/CartContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { getProfile, saveProfile } from '../data/profile.js';
 
 const formatLongDate = (value) => {
@@ -35,11 +36,30 @@ const inputClassName =
 export default function Profile() {
   const navigate = useNavigate();
   const { items, itemCount, total, increaseItem, decreaseItem, removeItem } = useCart();
+  const { user, updateProfile, logout } = useAuth();
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [storedProfile, setStoredProfile] = useState(() => getProfile());
-  const [formData, setFormData] = useState(() => getProfile());
+  const baseProfile = useMemo(() => {
+    if (user) {
+      return {
+        name: user.name ?? '',
+        email: user.email ?? '',
+        phone: user.phone ?? '',
+        document: user.document ?? '',
+        createdAt: user.created_at,
+      };
+    }
+    return getProfile();
+  }, [user]);
+  const [storedProfile, setStoredProfile] = useState(baseProfile);
+  const [formData, setFormData] = useState(baseProfile);
   const [isEditing, setIsEditing] = useState(false);
   const [formError, setFormError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    setStoredProfile(baseProfile);
+    setFormData(baseProfile);
+  }, [baseProfile]);
 
   const hasChanges = useMemo(() => {
     return ['name', 'phone'].some((field) => formData[field] !== storedProfile[field]);
@@ -78,7 +98,7 @@ export default function Profile() {
     setFormError('');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!hasChanges) return;
     const trimmedName = formData.name.trim();
     if (!isValidName(trimmedName)) {
@@ -89,16 +109,38 @@ export default function Profile() {
       setFormError('El telefono debe tener 10 numeros.');
       return;
     }
-    const nextProfile = {
-      ...storedProfile,
-      ...formData,
-      name: trimmedName,
-    };
-    saveProfile(nextProfile);
-    setStoredProfile(nextProfile);
-    setFormData(nextProfile);
-    setIsEditing(false);
+    setIsSaving(true);
     setFormError('');
+    try {
+      let nextProfile = {
+        ...storedProfile,
+        ...formData,
+        name: trimmedName,
+      };
+
+      if (user) {
+        const updated = await updateProfile({
+          name: trimmedName,
+          phone: formData.phone,
+        });
+        nextProfile = {
+          ...nextProfile,
+          name: updated.name,
+          phone: updated.phone,
+          createdAt: updated.created_at,
+        };
+      } else {
+        saveProfile(nextProfile);
+      }
+
+      setStoredProfile(nextProfile);
+      setFormData(nextProfile);
+      setIsEditing(false);
+    } catch (error) {
+      setFormError(error?.message || 'No se pudieron guardar los cambios.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -276,11 +318,14 @@ export default function Profile() {
                 </div>
               </div>
 
-              <button
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-full border border-[#ffd1d1] bg-[#fff6f6] py-2 text-[11px] font-semibold text-[#e24c3b]"
-                type="button"
-                onClick={() => navigate('/login')}
-              >
+                <button
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-full border border-[#ffd1d1] bg-[#fff6f6] py-2 text-[11px] font-semibold text-[#e24c3b]"
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    navigate('/login');
+                  }}
+                >
                 <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                   <path
                     d="M8 4h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8"
@@ -321,8 +366,9 @@ export default function Profile() {
                     className="flex-1 rounded-full bg-[#23b146] py-2 text-[11px] font-semibold text-white shadow-[0_8px_16px_rgba(35,177,70,0.3)]"
                     type="button"
                     onClick={handleSave}
+                    disabled={isSaving}
                   >
-                    Guardar cambios
+                    {isSaving ? 'Guardando...' : 'Guardar cambios'}
                   </button>
                   <button
                     className="flex-1 rounded-full border border-[#eadfd5] bg-white py-2 text-[11px] text-title"

@@ -21,6 +21,7 @@ import {
   stepThree,
   stepTwo,
 } from '../assets/index.js';
+import { fallbackProducts, fetchProducts } from '../api/products.js';
 import { menuItems } from '../data/menu.js';
 
 const formatCop = (value) => {
@@ -34,6 +35,8 @@ const formatCop = (value) => {
 export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
+  const [products, setProducts] = useState(menuItems);
+  const [productsError, setProductsError] = useState('');
   const { items, addItem, increaseItem, decreaseItem, removeItem, itemCount, total } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
@@ -124,6 +127,28 @@ export default function Home() {
       navigate('/home', { replace: true, state: {} });
     }
   }, [location.state, navigate]);
+
+  useEffect(() => {
+    let isActive = true;
+    fetchProducts()
+      .then((data) => {
+        if (!isActive) return;
+        if (data.length) {
+          setProducts(data);
+        } else {
+          setProducts(fallbackProducts());
+        }
+      })
+      .catch(() => {
+        if (!isActive) return;
+        setProducts(fallbackProducts());
+        setProductsError('No se pudo cargar el menú desde el servidor.');
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-cream">
@@ -300,7 +325,7 @@ export default function Home() {
               </p>
             </div>
             <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-              {menuItems.map((product) => (
+              {products.map((product) => (
                 <article
                   className="overflow-hidden rounded-[18px] bg-white shadow-[0_6px_14px_rgba(0,0,0,0.06)]"
                   key={product.id}
@@ -330,6 +355,9 @@ export default function Home() {
                 </article>
               ))}
             </div>
+            {productsError ? (
+              <p className="mt-4 text-center text-[11px] text-[#e24c3b]">{productsError}</p>
+            ) : null}
           </div>
         </section>
 

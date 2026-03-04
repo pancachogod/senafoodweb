@@ -2,8 +2,10 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cart, logo, nequi, profile, qr } from '../assets/index.js';
 import { useCart } from '../context/CartContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { useOrders } from '../context/OrdersContext.jsx';
 import { getProfile } from '../data/profile.js';
+import { createPayment } from '../api/payments.js';
 
 const formatCop = (value) => {
   return new Intl.NumberFormat('es-CO', {
@@ -16,14 +18,28 @@ const formatCop = (value) => {
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, itemCount, total, clearCart } = useCart();
-  const { addOrder } = useOrders();
+  const { createOrder } = useOrders();
+  const { token, user, isAuthenticated } = useAuth();
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [paymentProof, setPaymentProof] = useState(null);
   const [paymentError, setPaymentError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingOrderId, setPendingOrderId] = useState(null);
 
   const hasItems = items.length > 0;
   const summaryItems = useMemo(() => items, [items]);
-  const profileData = useMemo(() => getProfile(), []);
+  const profileData = useMemo(() => {
+    if (user) {
+      return {
+        name: user.name,
+        phone: user.phone,
+        email: user.email,
+        document: user.document,
+        createdAt: user.created_at,
+      };
+    }
+    return getProfile();
+  }, [user]);
 
   const handleProofChange = (event) => {
     const input = event.target;
@@ -42,53 +58,74 @@ export default function Checkout() {
     }
     const reader = new FileReader();
     reader.onload = () => {
-      setPaymentProof({ name: file.name, dataUrl: reader.result });
+      setPaymentProof({ name: file.name, dataUrl: reader.result, file });
       setPaymentError('');
       input.value = '';
     };
     reader.readAsDataURL(file);
   };
 
-  const createToken = () => {
-    const pool = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
-    const segment = (length) =>
-      Array.from({ length }, () => pool[Math.floor(Math.random() * pool.length)]).join('');
-    return `${segment(3)}-${segment(2)}-${segment(2)}`;
-  };
-
-  const handleConfirmPayment = () => {
+  const handleConfirmPayment = async () => {
     if (!hasItems) return;
-    if (!paymentProof) {
+    if (!isAuthenticated) {
+      setPaymentError('Inicia sesión para continuar.');
+      navigate('/login');
+      return;
+    }
+    if (!paymentProof?.file) {
       setPaymentError('Sube el comprobante para continuar.');
       return;
     }
-    const orderId = `order-${Date.now()}`;
-    const createdAt = new Date().toISOString();
-    const order = {
-      id: orderId,
-      title: 'Almuerzo de Día',
-      subtitle: summaryItems[0]?.name,
-      status: 'Pendiente',
-      paymentMethod: 'Nequi',
-      createdAt,
-      token: createToken(),
-      items: summaryItems.map((item) => ({
-        id: item.id,
-        name: item.name,
-        description: item.description,
-        price: item.price,
-        image: item.image,
-        quantity: item.quantity,
-      })),
-      total,
-      proof: paymentProof,
-    };
-    addOrder(order);
-    clearCart();
-    setIsPaymentOpen(false);
-    setPaymentProof(null);
+    setIsSubmitting(true);
     setPaymentError('');
-    navigate('/mis-pedidos', { state: { openOrderId: orderId } });
+    try {
+      const itemsPayload = summaryItems.map((item) => {
+        const numericId = Number.isInteger(item.id) ? item.id : Number(item.id);
+        if (Number.isFinite(numericId)) {
+          return {
+            product_id: numericId,
+            quantity: item.quantity,
+          };
+        }
+        return {
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          image_url: item.image,
+          quantity: item.quantity,
+        };
+      });
+
+      const order = pendingOrderId
+        ? { id: pendingOrderId, total }
+        : await createOrder({
+            items: itemsPayload,
+            payment_method: 'Nequi',
+          });
+
+      if (!pendingOrderId) {
+        setPendingOrderId(order.id);
+      }
+
+      await createPayment(token, {
+        order_id: order.id,
+        method: 'Nequi',
+        amount: order.total,
+        status: 'Pendiente',
+        proof: paymentProof.file,
+      });
+
+      clearCart();
+      setPendingOrderId(null);
+      setIsPaymentOpen(false);
+      setPaymentProof(null);
+      setPaymentError('');
+      navigate('/mis-pedidos', { state: { openOrderId: order.id } });
+    } catch (error) {
+      setPaymentError(error?.message || 'No se pudo confirmar el pedido.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -341,10 +378,10 @@ export default function Checkout() {
               <button
                 className="flex-1 rounded-full bg-[#7ccf8f] py-2 text-[12px] font-semibold text-white shadow-[0_8px_16px_rgba(124,207,143,0.3)] disabled:cursor-not-allowed disabled:bg-[#b6d9bf]"
                 type="button"
-                disabled={!paymentProof}
+                disabled={!paymentProof || isSubmitting}
                 onClick={handleConfirmPayment}
               >
-                Confirmar Pago
+                {isSubmitting ? 'Confirmando...' : 'Confirmar Pago'}
               </button>
             </div>
           </div>
