@@ -9,18 +9,23 @@ settings = get_settings()
 app = FastAPI(title="Sena Food Backend", version="1.0.0")
 
 allow_origins = settings.cors_origins
-if not allow_origins:
-    allow_origins = ["*"]
 
-allow_credentials = allow_origins != ["*"]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allow_origins,
-    allow_credentials=allow_credentials,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+if not allow_origins or allow_origins == ["*"]:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origin_regex=".*",
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allow_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 app.include_router(auth.router)
 app.include_router(products.router)
