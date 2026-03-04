@@ -1,0 +1,355 @@
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { cart, logo, nequi, profile, qr } from '../assets/index.js';
+import { useCart } from '../context/CartContext.jsx';
+import { useOrders } from '../context/OrdersContext.jsx';
+import { getProfile } from '../data/profile.js';
+
+const formatCop = (value) => {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+export default function Checkout() {
+  const navigate = useNavigate();
+  const { items, itemCount, total, clearCart } = useCart();
+  const { addOrder } = useOrders();
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [paymentProof, setPaymentProof] = useState(null);
+  const [paymentError, setPaymentError] = useState('');
+
+  const hasItems = items.length > 0;
+  const summaryItems = useMemo(() => items, [items]);
+  const profileData = useMemo(() => getProfile(), []);
+
+  const handleProofChange = (event) => {
+    const input = event.target;
+    const file = input.files?.[0];
+    if (!file) return;
+    const isValidType = ['image/png', 'image/jpeg'].includes(file.type);
+    if (!isValidType) {
+      setPaymentError('Solo se permiten imagenes PNG o JPG.');
+      event.target.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setPaymentError('El archivo supera 5MB.');
+      event.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPaymentProof({ name: file.name, dataUrl: reader.result });
+      setPaymentError('');
+      input.value = '';
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const createToken = () => {
+    const pool = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789';
+    const segment = (length) =>
+      Array.from({ length }, () => pool[Math.floor(Math.random() * pool.length)]).join('');
+    return `${segment(3)}-${segment(2)}-${segment(2)}`;
+  };
+
+  const handleConfirmPayment = () => {
+    if (!hasItems) return;
+    if (!paymentProof) {
+      setPaymentError('Sube el comprobante para continuar.');
+      return;
+    }
+    const orderId = `order-${Date.now()}`;
+    const createdAt = new Date().toISOString();
+    const order = {
+      id: orderId,
+      title: 'Almuerzo de Día',
+      subtitle: summaryItems[0]?.name,
+      status: 'Pendiente',
+      paymentMethod: 'Nequi',
+      createdAt,
+      token: createToken(),
+      items: summaryItems.map((item) => ({
+        id: item.id,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        image: item.image,
+        quantity: item.quantity,
+      })),
+      total,
+      proof: paymentProof,
+    };
+    addOrder(order);
+    clearCart();
+    setIsPaymentOpen(false);
+    setPaymentProof(null);
+    setPaymentError('');
+    navigate('/mis-pedidos', { state: { openOrderId: orderId } });
+  };
+
+  return (
+    <div className="min-h-screen bg-cream">
+      <header className="border-b border-[#eadfd5] bg-white shadow-[0_6px_16px_rgba(0,0,0,0.06)]">
+        <div className="mx-auto flex w-[min(1200px,92vw)] flex-wrap items-center justify-center gap-6 py-4 md:justify-between md:py-5">
+          <img className="h-10 w-auto" src={logo} alt="Sena Food" />
+          <nav className="flex items-center gap-7">
+            <button
+              className="text-[13px] font-medium text-[#5b667a]"
+              type="button"
+              onClick={() => navigate('/home')}
+            >
+              Inicio
+            </button>
+            <button
+              className="text-[13px] font-medium text-[#5b667a]"
+              type="button"
+              onClick={() => navigate('/mis-pedidos')}
+            >
+              Mis pedidos
+            </button>
+          </nav>
+          <div className="flex items-center gap-4">
+            <button
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#eadfd5] bg-white shadow-[0_4px_10px_rgba(0,0,0,0.08)]"
+              type="button"
+              aria-label="Perfil"
+              onClick={() => navigate('/perfil')}
+            >
+              <img className="h-[18px] w-[18px]" src={profile} alt="Perfil" />
+            </button>
+            <button
+              className="flex items-center gap-2 rounded-full bg-orange px-5 py-2 text-[12px] font-semibold text-white shadow-[0_10px_18px_rgba(242,106,29,0.26)]"
+              type="button"
+              aria-label={`Carrito (${itemCount})`}
+              onClick={() => navigate('/home', { state: { openCart: true } })}
+            >
+              <img className="h-4 w-4 brightness-0 invert" src={cart} alt="Carrito" />
+              Carrito
+              <span className="sr-only">{itemCount}</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="border-b border-[#eadfd5] bg-[linear-gradient(90deg,#fbf7f3_0%,#f0e9e2_55%,#fbf7f3_100%)]">
+        <div className="mx-auto w-[min(1200px,92vw)] py-8">
+          <button
+            className="inline-flex items-center gap-2 text-[12px] font-medium text-muted"
+            type="button"
+            onClick={() => navigate('/home', { state: { openCart: true } })}
+          >
+            <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path
+                d="M10.5 3.25L6 8l4.5 4.75"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Volver al carrito
+          </button>
+
+          <h1 className="mt-4 text-[18px] font-semibold text-title">Método de pago</h1>
+
+          <div className="mt-5 rounded-[18px] bg-white px-6 py-5 shadow-soft">
+            <h2 className="text-[12px] font-semibold text-title">Resumen del pedido</h2>
+
+            {hasItems ? (
+              <div className="mt-4 space-y-3 border-b border-[#f2e6dc] pb-4">
+                {summaryItems.map((item) => (
+                  <div className="flex items-start justify-between gap-4" key={item.id}>
+                    <div>
+                      <p className="text-[12px] font-semibold text-title">{item.name}</p>
+                      <p className="text-[10px] text-muted">
+                        {item.description || 'Incluye arroz, ensalada y bebida natural'}
+                      </p>
+                    </div>
+                    <span className="text-[11px] text-title">
+                      {formatCop(item.price)} x {item.quantity}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 text-[11px] text-muted">No hay articulos en tu carrito.</p>
+            )}
+
+            <div className="mt-4 space-y-2 text-[11px] text-muted">
+              <div className="flex items-center justify-between">
+                <span>Cliente:</span>
+                <span className="text-title">{profileData.name}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Teléfono:</span>
+                <span className="text-title">{profileData.phone}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Método de Pago:</span>
+                <span className="text-title">Nequi</span>
+              </div>
+              <div className="flex items-center justify-between pt-2 text-[12px] font-semibold text-title">
+                <span>Total</span>
+                <span className="text-orange">{formatCop(total)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5">
+            <p className="text-[12px] font-semibold text-title">Método de pago</p>
+            <button
+              className="mt-3 flex w-full items-center justify-between rounded-[14px] border border-[#b084ff] bg-white px-4 py-3 shadow-[0_8px_18px_rgba(176,132,255,0.2)]"
+              type="button"
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-[#f1e9ff]">
+                  <img className="h-6 w-6" src={nequi} alt="Nequi" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[12px] font-semibold text-title">Nequi</p>
+                  <p className="text-[10px] text-muted">Pago digital instantáneo</p>
+                </div>
+              </div>
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#8c5bff] text-[12px] text-white">
+                ✓
+              </span>
+            </button>
+          </div>
+
+            <button
+              className="mt-5 w-full rounded-full bg-orange py-2.5 text-[12px] font-semibold text-white shadow-[0_10px_18px_rgba(242,106,29,0.26)] disabled:cursor-not-allowed disabled:bg-[#e7b79f]"
+              type="button"
+              disabled={!hasItems}
+              onClick={() => {
+                setPaymentError('');
+                setIsPaymentOpen(true);
+              }}
+            >
+              Confirmar Pedido
+            </button>
+        </div>
+      </main>
+
+      {isPaymentOpen ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-[420px] rounded-[18px] bg-[#fff8f1] shadow-[0_18px_36px_rgba(0,0,0,0.2)]">
+            <div className="flex items-start justify-between border-b border-[#f0e1d6] px-6 py-4">
+              <div>
+                <h2 className="text-[16px] font-semibold text-title">Pago con Nequi</h2>
+                <p className="mt-1 text-[11px] text-muted">
+                  Realiza el pago mediante Nequi para confirmar tu pedido
+                </p>
+              </div>
+                <button
+                  className="text-[18px] text-muted"
+                  type="button"
+                  aria-label="Cerrar"
+                  onClick={() => {
+                    setIsPaymentOpen(false);
+                    setPaymentError('');
+                  }}
+                >
+                  ×
+                </button>
+            </div>
+
+            <div className="px-6 py-5">
+              <div className="flex flex-col items-center text-center">
+                <div className="flex h-[110px] w-[110px] items-center justify-center rounded-[14px] border border-[#e5d2ff] bg-[#f7f1ff]">
+                  <img className="h-[70px] w-[70px]" src={qr} alt="Codigo QR" />
+                </div>
+                <p className="mt-4 text-[11px] text-muted">
+                  Escanea el codigo QR con tu app Nequi
+                </p>
+                <p className="text-[10px] text-muted">
+                  O transfiere a: <span className="font-semibold text-title">3001234567</span>
+                </p>
+                <p className="mt-4 text-[11px] text-muted">Total a pagar</p>
+                <p className="text-[18px] font-semibold text-orange">{formatCop(total)} COP</p>
+              </div>
+
+              <div className="mt-6 border-t border-[#f0e1d6] pt-4">
+                <div className="flex items-center gap-2 text-[11px] font-semibold text-title">
+                  <span className="text-orange">⬆</span>
+                  Comprobante de Pago <span className="text-orange">*</span>
+                </div>
+                <label
+                  className="mt-3 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[14px] border border-[#eadfd5] bg-white px-4 py-5 text-center"
+                  htmlFor="payment-proof"
+                >
+                  <span className="text-[18px] text-muted">{paymentProof ? '✓' : '⬆'}</span>
+                  <span className="text-[11px] text-muted">
+                    {paymentProof
+                      ? 'Comprobante cargado'
+                      : 'Haz clic para subir el comprobante'}
+                  </span>
+                  <span className="text-[10px] text-muted">
+                    {paymentProof ? paymentProof.name : 'PNG, JPG o JPEG (max. 5MB)'}
+                  </span>
+                </label>
+                <input
+                  id="payment-proof"
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  className="hidden"
+                  onChange={handleProofChange}
+                />
+                {paymentProof ? (
+                  <div className="mt-3 flex items-center gap-3 rounded-[12px] border border-[#eadfd5] bg-white px-3 py-2">
+                    <img
+                      className="h-12 w-12 rounded-[10px] object-cover"
+                      src={paymentProof.dataUrl}
+                      alt="Comprobante"
+                    />
+                    <div className="flex-1 text-[10px] text-muted">
+                      Archivo seleccionado:{' '}
+                      <span className="font-semibold text-title">{paymentProof.name}</span>
+                    </div>
+                    <button
+                      className="text-[10px] font-semibold text-orange"
+                      type="button"
+                      onClick={() => setPaymentProof(null)}
+                    >
+                      Cambiar
+                    </button>
+                  </div>
+                ) : null}
+                {paymentError ? (
+                  <p className="mt-2 text-[10px] text-[#e24c3b]">{paymentError}</p>
+                ) : null}
+                <p className="mt-2 text-[10px] text-muted">
+                  * El comprobante es obligatorio para confirmar tu pedido
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 border-t border-[#f0e1d6] px-6 py-4">
+              <button
+                className="flex-1 rounded-full border border-[#eadfd5] bg-white py-2 text-[12px] text-title"
+                type="button"
+                onClick={() => {
+                  setIsPaymentOpen(false);
+                  setPaymentError('');
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                className="flex-1 rounded-full bg-[#7ccf8f] py-2 text-[12px] font-semibold text-white shadow-[0_8px_16px_rgba(124,207,143,0.3)] disabled:cursor-not-allowed disabled:bg-[#b6d9bf]"
+                type="button"
+                disabled={!paymentProof}
+                onClick={handleConfirmPayment}
+              >
+                Confirmar Pago
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
