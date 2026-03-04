@@ -10,7 +10,7 @@ from ..schemas import ProductCreate, ProductOut
 router = APIRouter(prefix="/products", tags=["products"])
 
 
-@router.get("/", response_model=list[ProductOut])
+@router.get("", response_model=list[ProductOut])
 def list_products(
     include_inactive: bool = False,
     db: Session = Depends(get_db),
@@ -21,7 +21,7 @@ def list_products(
     return list(db.scalars(query).all())
 
 
-@router.post("/", response_model=ProductOut)
+@router.post("", response_model=ProductOut)
 def create_product(
     payload: ProductCreate,
     db: Session = Depends(get_db),

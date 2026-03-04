@@ -56,7 +56,7 @@ def _build_item_data(items: list, db: Session) -> tuple[list[dict], int]:
     return built, total
 
 
-@router.post("/", response_model=OrderOut, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=OrderOut, status_code=status.HTTP_201_CREATED)
 def create_order(
     payload: OrderCreate,
     db: Session = Depends(get_db),
@@ -93,7 +93,7 @@ def create_order(
     raise HTTPException(status_code=500, detail="Could not create order")
 
 
-@router.get("/", response_model=list[OrderOut])
+@router.get("", response_model=list[OrderOut])
 def list_orders(
     all: bool = False,
     db: Session = Depends(get_db),

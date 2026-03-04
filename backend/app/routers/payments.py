@@ -9,7 +9,7 @@ from ..schemas import PaymentOut
 router = APIRouter(prefix="/payments", tags=["payments"])
 
 
-@router.post("/", response_model=PaymentOut)
+@router.post("", response_model=PaymentOut)
 async def create_payment(
     order_id: int = Form(...),
     method: str = Form(...),
