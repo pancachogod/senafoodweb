@@ -36,12 +36,9 @@
   input:not([type='hidden']),
   textarea,
   select,
-  label,
-  [tabindex]:not([tabindex='-1']),
-  .cursor-pointer,
-  .cursor-auto,
-  .cursor-default {
-    cursor: var(--cursor-interactive) !important;
+  label[for],
+  [tabindex]:not([tabindex='-1']) {
+    cursor: var(--cursor-interactive);
   }
 
   button:disabled,
@@ -49,6 +46,6 @@
   textarea:disabled,
   select:disabled,
   [aria-disabled='true'] {
-    cursor: not-allowed !important;
+    cursor: not-allowed;
   }
 }
