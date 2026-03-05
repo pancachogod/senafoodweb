@@ -27,6 +27,8 @@
   summary,
   [role='button'],
   [role='link'],
+  label,
+  [onclick],
   input[type='button'],
   input[type='submit'],
   input[type='reset'],
@@ -36,7 +38,6 @@
   input:not([type='hidden']),
   textarea,
   select,
-  label[for],
   [tabindex]:not([tabindex='-1']) {
     cursor: var(--cursor-interactive);
   }
@@ -47,5 +48,11 @@
   select:disabled,
   [aria-disabled='true'] {
     cursor: not-allowed;
+  }
+}
+
+@layer utilities {
+  .cursor-pointer:not(:disabled):not([aria-disabled='true']) {
+    cursor: var(--cursor-interactive);
   }
 }
