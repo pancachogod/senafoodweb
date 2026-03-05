@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
+import { useAuth } from './context/AuthContext.jsx';
 import Forgot from './pages/Forgot.jsx';
 import ForgotSent from './pages/ForgotSent.jsx';
 import Home from './pages/Home.jsx';
@@ -11,6 +12,20 @@ import Reset from './pages/Reset.jsx';
 import ResetSuccess from './pages/ResetSuccess.jsx';
 import Profile from './pages/Profile.jsx';
 
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
 export default function App() {
   return (
     <div className="min-h-screen font-sans text-text antialiased">
@@ -18,11 +33,46 @@ export default function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/menu/:id" element={<MenuItem />} />
-        <Route path="/checkout" element={<Checkout />} />
-        <Route path="/perfil" element={<Profile />} />
-        <Route path="/mis-pedidos" element={<Orders />} />
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/menu/:id"
+          element={
+            <ProtectedRoute>
+              <MenuItem />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/checkout"
+          element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/perfil"
+          element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mis-pedidos"
+          element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/forgot" element={<Forgot />} />
         <Route path="/forgot/sent" element={<ForgotSent />} />
         <Route path="/reset" element={<Reset />} />

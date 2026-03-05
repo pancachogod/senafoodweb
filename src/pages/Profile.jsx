@@ -335,7 +335,7 @@ export default function Profile() {
                   type="button"
                   onClick={() => {
                     logout();
-                    navigate('/login');
+                    navigate('/login', { replace: true });
                   }}
                 >
                 <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
