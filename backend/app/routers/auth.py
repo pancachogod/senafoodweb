@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from ..db import get_db
@@ -29,7 +30,19 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> UserPublic:
     if existing:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Email already registered",
+            detail="El correo ya esta registrado.",
+        )
+    existing_phone = db.scalar(select(User).where(User.phone == payload.phone))
+    if existing_phone:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="El telefono ya esta registrado.",
+        )
+    existing_document = db.scalar(select(User).where(User.document == payload.document))
+    if existing_document:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="El documento ya esta registrado.",
         )
     if not is_valid_password(payload.password):
         raise HTTPException(
@@ -44,9 +57,16 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> UserPublic:
         document=payload.document,
         password_hash=get_password_hash(payload.password),
     )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+    try:
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="El correo, telefono o documento ya esta registrado.",
+        ) from None
     return user
 
 
@@ -103,7 +123,25 @@ def update_me(
     if payload.name is not None:
         current_user.name = payload.name
     if payload.phone is not None:
+        existing_phone = db.scalar(
+            select(User).where(
+                User.phone == payload.phone,
+                User.id != current_user.id,
+            )
+        )
+        if existing_phone:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="El telefono ya esta registrado.",
+            )
         current_user.phone = payload.phone
-    db.commit()
-    db.refresh(current_user)
+    try:
+        db.commit()
+        db.refresh(current_user)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="El telefono ya esta registrado.",
+        ) from None
     return current_user
