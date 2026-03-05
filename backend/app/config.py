@@ -51,6 +51,9 @@ class Settings:
         self.access_token_expire_minutes = int(
             os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440")
         )
+        self.password_reset_expire_minutes = int(
+            os.getenv("PASSWORD_RESET_EXPIRE_MINUTES", "60")
+        )
         cors_env = os.getenv("CORS_ORIGINS", "")
         self.cors_origins = parse_cors_origins(cors_env)
         self.env = os.getenv("ENV", "dev")

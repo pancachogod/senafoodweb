@@ -1,11 +1,45 @@
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout.jsx';
 import Card from '../components/Card.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
 import { mail } from '../assets/index.js';
+import { validatePasswordReset } from '../api/auth.js';
 
 export default function ForgotSent() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [isValid, setIsValid] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const token = searchParams.get('token') || '';
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/forgot', { replace: true });
+      return;
+    }
+    let isMounted = true;
+    const runValidation = async () => {
+      try {
+        await validatePasswordReset(token);
+        if (isMounted) {
+          setIsValid(true);
+        }
+      } catch (error) {
+        if (isMounted) {
+          navigate('/forgot', { replace: true });
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+    runValidation();
+    return () => {
+      isMounted = false;
+    };
+  }, [navigate, token]);
 
   return (
     <AuthLayout>
@@ -21,8 +55,9 @@ export default function ForgotSent() {
           bandeja de entrada o carpeta de spam para continuar con el proceso."
         </p>
         <PrimaryButton
-          onClick={() => navigate('/reset')}
+          onClick={() => navigate(`/reset?token=${encodeURIComponent(token)}`)}
           className="max-w-[120px] normal-case shadow-none"
+          disabled={isLoading || !isValid}
         >
           Continuar
         </PrimaryButton>

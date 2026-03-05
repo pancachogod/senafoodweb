@@ -25,3 +25,24 @@ export function updateMe(token, payload) {
     token,
   });
 }
+
+export function requestPasswordReset(value) {
+  return apiRequest('/auth/password/forgot', {
+    method: 'POST',
+    body: { value },
+  });
+}
+
+export function validatePasswordReset(token) {
+  return apiRequest('/auth/password/validate', {
+    method: 'POST',
+    body: { token },
+  });
+}
+
+export function confirmPasswordReset(token, password) {
+  return apiRequest('/auth/password/reset', {
+    method: 'POST',
+    body: { token, password },
+  });
+}

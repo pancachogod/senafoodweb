@@ -40,6 +40,19 @@ class TokenResponse(BaseModel):
     user: UserPublic
 
 
+class PasswordResetRequest(BaseModel):
+    value: str
+
+
+class PasswordResetValidate(BaseModel):
+    token: str
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    password: str = Field(min_length=6)
+
+
 class ProductCreate(BaseModel):
     name: str
     description: str | None = ""
