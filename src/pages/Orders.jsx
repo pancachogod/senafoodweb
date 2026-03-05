@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { jsPDF } from 'jspdf';
 import CartDrawer from '../components/CartDrawer.jsx';
 import { cart, logo, profile } from '../assets/index.js';
 import { useCart } from '../context/CartContext.jsx';
@@ -50,7 +51,7 @@ export default function Orders() {
   const location = useLocation();
   const { orders, cancelOrder, isLoading, error } = useOrders();
   const { items, itemCount, total, increaseItem, decreaseItem, removeItem } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [openOrderId, setOpenOrderId] = useState(null);
   const [isCancelOpen, setIsCancelOpen] = useState(false);
@@ -122,6 +123,134 @@ export default function Orders() {
   const handleViewProof = (proof) => {
     if (!proof?.dataUrl) return;
     window.open(proof.dataUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  const buildReceiptFileName = (order) => {
+    const tokenPart = order?.token
+      ? String(order.token).replace(/[^a-zA-Z0-9_-]/g, '')
+      : String(order?.id ?? 'pedido');
+    const date = new Date(order?.createdAt);
+    const dateLabel = Number.isNaN(date.getTime()) ? '' : date.toISOString().slice(0, 10);
+    return `recibo-${tokenPart || 'pedido'}${dateLabel ? `-${dateLabel}` : ''}.pdf`;
+  };
+
+  const handleDownloadReceipt = (order) => {
+    if (!order) return;
+
+    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 40;
+    const lineHeight = 14;
+    let y = margin;
+
+    const ensureSpace = (heightNeeded) => {
+      if (y + heightNeeded > pageHeight - margin) {
+        doc.addPage();
+        y = margin;
+      }
+    };
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('Recibo de compra', margin, y);
+    y += 20;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text('Sena Food', margin, y);
+    y += lineHeight;
+    doc.text(`Fecha de emision: ${formatShortDateTime(order.createdAt)}`, margin, y);
+    y += lineHeight;
+    doc.text(`Pedido: ${order.token || order.id}`, margin, y);
+    y += lineHeight;
+    doc.text(`Estado: ${order.status}`, margin, y);
+    y += lineHeight;
+    doc.text(`Metodo de pago: ${order.paymentMethod || 'Nequi'}`, margin, y);
+    y += lineHeight;
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 18;
+
+    const receiptUser = order.user || user;
+    if (receiptUser) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(12);
+      doc.text('Cliente', margin, y);
+      y += 16;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+
+      const clientLines = [];
+      if (receiptUser.name) clientLines.push(`Nombre: ${receiptUser.name}`);
+      if (receiptUser.document) clientLines.push(`Documento: ${receiptUser.document}`);
+      if (receiptUser.email) clientLines.push(`Correo: ${receiptUser.email}`);
+      if (receiptUser.phone) clientLines.push(`Telefono: ${receiptUser.phone}`);
+      if (!clientLines.length) clientLines.push('Informacion no disponible.');
+
+      clientLines.forEach((line) => {
+        ensureSpace(lineHeight);
+        doc.text(line, margin, y);
+        y += lineHeight;
+      });
+      y += 6;
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 18;
+    }
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('Detalle del pedido', margin, y);
+    y += 16;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+
+    const itemsList = Array.isArray(order.items) ? order.items : [];
+    if (!itemsList.length) {
+      doc.text('Sin productos registrados.', margin, y);
+      y += lineHeight;
+    } else {
+      const colSubtotalX = pageWidth - margin;
+      const colUnitX = colSubtotalX - 90;
+      const colQtyX = colUnitX - 50;
+      const colNameWidth = colQtyX - margin - 10;
+
+      doc.setFont('helvetica', 'bold');
+      doc.text('Producto', margin, y);
+      doc.text('Cant.', colQtyX, y, { align: 'right' });
+      doc.text('Unit.', colUnitX, y, { align: 'right' });
+      doc.text('Subtotal', colSubtotalX, y, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      y += 12;
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 12;
+
+      itemsList.forEach((item) => {
+        const quantity = Number.isFinite(Number(item.quantity)) ? Number(item.quantity) : 1;
+        const unitPrice = Number.isFinite(Number(item.price)) ? Number(item.price) : 0;
+        const subtotal = unitPrice * quantity;
+        const nameLines = doc.splitTextToSize(item.name || 'Producto', colNameWidth);
+        const rowHeight = lineHeight * nameLines.length;
+        ensureSpace(rowHeight + 12);
+
+        doc.text(nameLines, margin, y);
+        doc.text(String(quantity), colQtyX, y, { align: 'right' });
+        doc.text(formatCop(unitPrice), colUnitX, y, { align: 'right' });
+        doc.text(formatCop(subtotal), colSubtotalX, y, { align: 'right' });
+        y += rowHeight + 6;
+      });
+    }
+
+    ensureSpace(40);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 18;
+    doc.setFont('helvetica', 'bold');
+    doc.text('Total', pageWidth - margin - 90, y, { align: 'right' });
+    doc.text(formatCop(order.total || 0), pageWidth - margin, y, { align: 'right' });
+    y += 24;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text('Gracias por tu compra.', margin, y);
+
+    doc.save(buildReceiptFileName(order));
   };
 
   const getStatusStyles = (status) => {
@@ -424,8 +553,9 @@ export default function Orders() {
                               <button
                                 className="w-full rounded-full border border-[#eadfd5] bg-white py-2 text-[11px] text-title"
                                 type="button"
+                                onClick={() => handleDownloadReceipt(order)}
                               >
-                                Download receipt
+                                Descargar Recibo
                               </button>
                               <button
                                 className="w-full rounded-full bg-[#ff2f2f] py-2 text-[11px] font-semibold text-white"
