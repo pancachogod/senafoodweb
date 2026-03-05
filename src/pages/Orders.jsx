@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import CartDrawer from '../components/CartDrawer.jsx';
 import { cart, logo, profile } from '../assets/index.js';
@@ -56,6 +56,8 @@ export default function Orders() {
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState(null);
   const [cancelError, setCancelError] = useState('');
+  const [copiedToken, setCopiedToken] = useState(null);
+  const copyTimeoutRef = useRef(null);
 
   const sortedOrders = useMemo(() => {
     return [...orders].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -66,6 +68,14 @@ export default function Orders() {
       setOpenOrderId(location.state.openOrderId);
     }
   }, [location.state]);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleToggle = (orderId) => {
     setOpenOrderId((prev) => (prev === orderId ? null : orderId));
@@ -97,6 +107,13 @@ export default function Orders() {
     if (!value) return;
     try {
       await navigator.clipboard.writeText(value);
+      setCopiedToken(value);
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+      copyTimeoutRef.current = window.setTimeout(() => {
+        setCopiedToken(null);
+      }, 1500);
     } catch (error) {
       return;
     }
@@ -324,33 +341,40 @@ export default function Orders() {
                                   <span className="rounded-[8px] bg-[#fff2e6] px-2 py-1 text-[12px] font-semibold text-orange">
                                     {order.token}
                                   </span>
-                                  <button
-                                    className="flex h-7 w-7 items-center justify-center rounded-[8px] border border-[#eadfd5] bg-white"
-                                    type="button"
-                                    aria-label="Copiar token"
-                                    onClick={() => handleCopy(order.token)}
-                                  >
-                                    <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none">
-                                      <rect
-                                        x="7"
-                                        y="6"
-                                        width="9"
-                                        height="10"
-                                        rx="2"
-                                        stroke="currentColor"
-                                        strokeWidth="1.3"
-                                      />
-                                      <rect
-                                        x="4"
-                                        y="3"
-                                        width="9"
-                                        height="10"
-                                        rx="2"
-                                        stroke="currentColor"
-                                        strokeWidth="1.3"
-                                      />
-                                    </svg>
-                                  </button>
+                                  <div className="relative">
+                                    <button
+                                      className="flex h-7 w-7 items-center justify-center rounded-[8px] border border-[#eadfd5] bg-white"
+                                      type="button"
+                                      aria-label="Copiar token"
+                                      onClick={() => handleCopy(order.token)}
+                                    >
+                                      <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none">
+                                        <rect
+                                          x="7"
+                                          y="6"
+                                          width="9"
+                                          height="10"
+                                          rx="2"
+                                          stroke="currentColor"
+                                          strokeWidth="1.3"
+                                        />
+                                        <rect
+                                          x="4"
+                                          y="3"
+                                          width="9"
+                                          height="10"
+                                          rx="2"
+                                          stroke="currentColor"
+                                          strokeWidth="1.3"
+                                        />
+                                      </svg>
+                                    </button>
+                                    {copiedToken === order.token ? (
+                                      <span className="pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 rounded-full bg-title px-2 py-0.5 text-[10px] font-semibold text-white shadow-soft">
+                                        Copiado
+                                      </span>
+                                    ) : null}
+                                  </div>
                                   {order.proof?.dataUrl ? (
                                     <button
                                       className="flex h-7 w-7 items-center justify-center rounded-[8px] border border-[#eadfd5] bg-white"
