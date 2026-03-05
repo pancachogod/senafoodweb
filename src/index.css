@@ -15,7 +15,7 @@
 
 @layer base {
   :root {
-    --cursor-interactive: url('./assets/click.png') 8 2, auto;
+    --cursor-interactive: url('./assets/punteroi.png') 8 2, auto;
   }
 
   body {
