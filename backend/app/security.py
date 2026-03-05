@@ -30,3 +30,7 @@ def create_access_token(subject: str, expires_delta: timedelta | None = None) ->
 def decode_access_token(token: str) -> dict:
     settings = get_settings()
     return jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])
+
+
+def is_valid_password(password: str) -> bool:
+    return len(password) >= 6 and any(char.isupper() for char in password)

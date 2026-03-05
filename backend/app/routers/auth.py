@@ -16,6 +16,7 @@ from ..schemas import (
 from ..security import (
     create_access_token,
     get_password_hash,
+    is_valid_password,
     verify_password,
 )
 
@@ -29,6 +30,11 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> UserPublic:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Email already registered",
+        )
+    if not is_valid_password(payload.password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La contrasena debe tener al menos 6 caracteres y una mayuscula.",
         )
 
     user = User(
@@ -72,6 +78,11 @@ def change_password(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="La nueva contrasena debe ser diferente.",
+        )
+    if not is_valid_password(payload.new_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La contrasena debe tener al menos 6 caracteres y una mayuscula.",
         )
     current_user.password_hash = get_password_hash(payload.new_password)
     db.commit()
