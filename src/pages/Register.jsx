@@ -11,6 +11,7 @@ const nameRegex = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/;
 
 const sanitizeName = (value) => value.replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]/g, '');
 const sanitizeDigits = (value) => value.replace(/\D/g, '');
+const sanitizeDocument = (value) => sanitizeDigits(value).slice(0, 11);
 
 const isValidPassword = (value) => value.length >= 6 && /[A-Z]/.test(value);
 
@@ -76,9 +77,10 @@ export default function Register() {
           name="document"
           placeholder="Ingresa tu numero de documento"
           value={document}
-          onChange={(value) => setDocument(sanitizeDigits(value))}
+          onChange={(value) => setDocument(sanitizeDocument(value))}
           autoComplete="off"
           inputMode="numeric"
+          maxLength={11}
         />
         <TextInput
           label="Nombre completo"

@@ -103,7 +103,7 @@ export default function Profile() {
     }
 
     if (name === 'document') {
-      nextValue = value.replace(/\D/g, '');
+      nextValue = value.replace(/\D/g, '').slice(0, 11);
     }
 
     setFormData((prev) => ({
@@ -401,6 +401,7 @@ export default function Profile() {
                     value={formData.document}
                     onChange={handleInputChange}
                     inputMode="numeric"
+                    maxLength={11}
                     disabled
                   />
                 </div>
