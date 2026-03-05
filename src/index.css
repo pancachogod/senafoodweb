@@ -15,7 +15,7 @@
 
 @layer base {
   :root {
-    --cursor-interactive: url('/cursor-click.svg') 12 3, pointer;
+    --cursor-interactive: url('./assets/click.png') 8 2, auto;
   }
 
   body {
