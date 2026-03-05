@@ -25,6 +25,8 @@ export default function Checkout() {
   const [paymentError, setPaymentError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingOrderId, setPendingOrderId] = useState(null);
+  const isProofReady = Boolean(paymentProof);
+  const shouldHighlightPayment = isProofReady && !isSubmitting;
 
   const hasItems = items.length > 0;
   const summaryItems = useMemo(() => items, [items]);
@@ -376,9 +378,13 @@ export default function Checkout() {
                 Cancelar
               </button>
               <button
-                className="flex-1 rounded-full bg-[#7ccf8f] py-2 text-[12px] font-semibold text-white shadow-[0_8px_16px_rgba(124,207,143,0.3)] disabled:cursor-not-allowed disabled:bg-[#b6d9bf]"
+                className={`flex-1 rounded-full py-2 text-[12px] font-semibold text-white transition ${
+                  shouldHighlightPayment
+                    ? 'bg-[#59c976] shadow-[0_12px_20px_rgba(89,201,118,0.35)] ring-2 ring-[#b9f2cb]/70'
+                    : 'bg-[#cfd3d8] shadow-none'
+                } disabled:cursor-not-allowed`}
                 type="button"
-                disabled={!paymentProof || isSubmitting}
+                disabled={!isProofReady || isSubmitting}
                 onClick={handleConfirmPayment}
               >
                 {isSubmitting ? 'Confirmando...' : 'Confirmar Pago'}
