@@ -32,6 +32,8 @@ const isValidPhone = (value) => /^\d{10}$/.test(value);
 
 const inputClassName =
   'w-full rounded-[12px] border border-[#f2e6dc] bg-[#fff9f3] px-3 py-2.5 text-[12px] text-title shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition focus:border-orange focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:bg-[#f7efe7] disabled:text-muted';
+const editableInputClassName =
+  'border-[#59c976] bg-white shadow-[0_0_0_3px_rgba(89,201,118,0.2)]';
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -66,6 +68,9 @@ export default function Profile() {
   }, [formData, storedProfile]);
 
   const canEdit = isEditing || hasChanges;
+  const editButtonClassName = canEdit
+    ? 'border-[#7ad39b] bg-[#e7f7ec] text-[#1f7a3a] shadow-[0_10px_18px_rgba(89,201,118,0.25)]'
+    : 'border-[#eadfd5] bg-white text-title shadow-soft';
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -226,15 +231,16 @@ export default function Profile() {
                     <p className="text-[11px] text-muted">{formData.email}</p>
                   </div>
                 </div>
-                <button
-                  className="inline-flex items-center gap-2 rounded-full border border-[#eadfd5] bg-white px-3 py-1.5 text-[11px] text-title shadow-soft"
-                  type="button"
-                  onClick={() => {
-                    setIsEditing((prev) => !prev);
-                    setFormError('');
-                  }}
-                >
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <div className="flex flex-col items-end gap-2">
+                  <button
+                    className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition ${editButtonClassName}`}
+                    type="button"
+                    onClick={() => {
+                      setIsEditing((prev) => !prev);
+                      setFormError('');
+                    }}
+                  >
+                    <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                     <path
                       d="M13.9 3.6l2.5 2.5a1.1 1.1 0 0 1 0 1.6l-7.9 7.9-3.3.8.8-3.3 7.9-7.9a1.1 1.1 0 0 1 1.6 0Z"
                       stroke="currentColor"
@@ -249,8 +255,14 @@ export default function Profile() {
                       strokeLinecap="round"
                     />
                   </svg>
-                  Editar
-                </button>
+                  {canEdit ? 'Editando' : 'Editar'}
+                  </button>
+                  {canEdit ? (
+                    <span className="rounded-full bg-[#eefaf2] px-2 py-0.5 text-[10px] font-semibold text-[#1f7a3a]">
+                      Edición activa
+                    </span>
+                  ) : null}
+                </div>
               </div>
 
               <div className="mt-4 space-y-3">
@@ -276,7 +288,7 @@ export default function Profile() {
                     Nombre Completo
                   </label>
                   <input
-                    className={inputClassName}
+                    className={`${inputClassName} ${canEdit ? editableInputClassName : ''}`}
                     id="name"
                     name="name"
                     type="text"
@@ -290,7 +302,7 @@ export default function Profile() {
                     Telefono
                   </label>
                   <input
-                    className={inputClassName}
+                    className={`${inputClassName} ${canEdit ? editableInputClassName : ''}`}
                     id="phone"
                     name="phone"
                     type="tel"
