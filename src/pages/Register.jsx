@@ -163,10 +163,6 @@ export default function Register() {
                   credenciales de acceso.
                 </li>
                 <li>
-                  En caso de olvido o pérdida de contraseña, el sistema ofrece un
-                  proceso de recuperación mediante correo electrónico.
-                </li>
-                <li>
                   No se permite el uso indebido o fraudulento de la plataforma.
                 </li>
                 <li>

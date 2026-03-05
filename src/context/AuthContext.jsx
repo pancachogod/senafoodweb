@@ -1,5 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { getMe, login as loginRequest, register as registerRequest, updateMe } from '../api/auth.js';
+import {
+  changePassword as changePasswordRequest,
+  getMe,
+  login as loginRequest,
+  register as registerRequest,
+  updateMe,
+} from '../api/auth.js';
 
 const AuthContext = createContext(null);
 
@@ -92,6 +98,13 @@ export function AuthProvider({ children }) {
     return updated;
   };
 
+  const changePassword = async (payload) => {
+    if (!token) {
+      throw new Error('Debes iniciar sesión.');
+    }
+    return changePasswordRequest(token, payload);
+  };
+
   const logout = () => {
     setToken(null);
     setUser(null);
@@ -110,6 +123,7 @@ export function AuthProvider({ children }) {
       login,
       register,
       updateProfile,
+      changePassword,
       logout,
     }),
     [token, user, isLoading]

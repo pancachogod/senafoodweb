@@ -29,6 +29,7 @@ const isValidName = (value) => {
 };
 
 const isValidPhone = (value) => /^\d{10}$/.test(value);
+const isValidPassword = (value) => value.length >= 6 && /[A-Z]/.test(value);
 
 const inputClassName =
   'w-full rounded-[12px] border border-[#f2e6dc] bg-[#fff9f3] px-3 py-2.5 text-[12px] text-title shadow-[inset_0_1px_0_rgba(255,255,255,0.8)] transition focus:border-orange focus:bg-white focus:outline-none disabled:cursor-not-allowed disabled:bg-[#f7efe7] disabled:text-muted';
@@ -38,7 +39,7 @@ const editableInputClassName =
 export default function Profile() {
   const navigate = useNavigate();
   const { items, itemCount, total, increaseItem, decreaseItem, removeItem } = useCart();
-  const { user, updateProfile, logout } = useAuth();
+  const { user, updateProfile, logout, changePassword } = useAuth();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const baseProfile = useMemo(() => {
     if (user) {
@@ -57,6 +58,15 @@ export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [formError, setFormError] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [isPasswordSaving, setIsPasswordSaving] = useState(false);
 
   useEffect(() => {
     setStoredProfile(baseProfile);
@@ -152,6 +162,72 @@ export default function Profile() {
     setFormData(storedProfile);
     setIsEditing(false);
     setFormError('');
+  };
+
+  const resetPasswordForm = () => {
+    setPasswordForm({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    });
+  };
+
+  const handlePasswordOpen = () => {
+    setShowPasswordForm(true);
+    setPasswordError('');
+    setPasswordSuccess('');
+  };
+
+  const handlePasswordInputChange = (event) => {
+    const { name, value } = event.target;
+    setPasswordForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setPasswordError('');
+    setPasswordSuccess('');
+  };
+
+  const handlePasswordSubmit = async () => {
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordError('Completa todos los campos.');
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('La confirmación no coincide.');
+      return;
+    }
+    if (!isValidPassword(passwordForm.newPassword)) {
+      setPasswordError('La contraseña debe tener al menos 6 caracteres y una mayúscula.');
+      return;
+    }
+    if (passwordForm.currentPassword === passwordForm.newPassword) {
+      setPasswordError('La nueva contraseña debe ser diferente.');
+      return;
+    }
+    setIsPasswordSaving(true);
+    setPasswordError('');
+    setPasswordSuccess('');
+    try {
+      await changePassword({
+        current_password: passwordForm.currentPassword,
+        new_password: passwordForm.newPassword,
+      });
+      resetPasswordForm();
+      setShowPasswordForm(false);
+      setPasswordSuccess('Contraseña actualizada.');
+    } catch (error) {
+      setPasswordError(error?.message || 'No se pudo cambiar la contraseña.');
+    } finally {
+      setIsPasswordSaving(false);
+    }
+  };
+
+  const handlePasswordCancel = () => {
+    resetPasswordForm();
+    setPasswordError('');
+    setPasswordSuccess('');
+    setShowPasswordForm(false);
   };
 
   const createdAtLabel = formatLongDate(formData.createdAt || storedProfile.createdAt);
@@ -330,14 +406,105 @@ export default function Profile() {
                 </div>
               </div>
 
-                <button
-                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-full border border-[#ffd1d1] bg-[#fff6f6] py-2 text-[11px] font-semibold text-[#e24c3b]"
-                  type="button"
-                  onClick={() => {
-                    logout();
-                    navigate('/login', { replace: true });
-                  }}
-                >
+              <div className="mt-5 rounded-[16px] border border-[#f1e5db] bg-[#fff8f2] px-4 py-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[12px] font-semibold text-title">Contraseña</p>
+                    <p className="text-[10px] text-muted">
+                      Actualiza tu contraseña para mantener tu cuenta segura.
+                    </p>
+                  </div>
+                  {!showPasswordForm ? (
+                    <button
+                      className="rounded-full bg-orange px-4 py-1.5 text-[11px] font-semibold text-white shadow-[0_8px_16px_rgba(242,106,29,0.2)]"
+                      type="button"
+                      onClick={handlePasswordOpen}
+                    >
+                      Cambiar contraseña
+                    </button>
+                  ) : null}
+                </div>
+
+                {showPasswordForm ? (
+                  <div className="mt-3 space-y-3">
+                    <div>
+                      <label className="mb-1 block text-[11px] text-muted" htmlFor="currentPassword">
+                        Contraseña actual
+                      </label>
+                      <input
+                        className={inputClassName}
+                        id="currentPassword"
+                        name="currentPassword"
+                        type="password"
+                        value={passwordForm.currentPassword}
+                        onChange={handlePasswordInputChange}
+                        autoComplete="current-password"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[11px] text-muted" htmlFor="newPassword">
+                        Nueva contraseña
+                      </label>
+                      <input
+                        className={inputClassName}
+                        id="newPassword"
+                        name="newPassword"
+                        type="password"
+                        value={passwordForm.newPassword}
+                        onChange={handlePasswordInputChange}
+                        autoComplete="new-password"
+                      />
+                    </div>
+                    <div>
+                      <label className="mb-1 block text-[11px] text-muted" htmlFor="confirmPassword">
+                        Confirmar contraseña
+                      </label>
+                      <input
+                        className={inputClassName}
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        value={passwordForm.confirmPassword}
+                        onChange={handlePasswordInputChange}
+                        autoComplete="new-password"
+                      />
+                    </div>
+                    {passwordError ? (
+                      <p className="text-[10px] text-[#e24c3b]">{passwordError}</p>
+                    ) : null}
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <button
+                        className="flex-1 rounded-full bg-[#23b146] py-2 text-[11px] font-semibold text-white shadow-[0_8px_16px_rgba(35,177,70,0.3)]"
+                        type="button"
+                        onClick={handlePasswordSubmit}
+                        disabled={isPasswordSaving}
+                      >
+                        {isPasswordSaving ? 'Cambiando...' : 'Cambiar contraseña'}
+                      </button>
+                      <button
+                        className="flex-1 rounded-full border border-[#eadfd5] bg-white py-2 text-[11px] text-title"
+                        type="button"
+                        onClick={handlePasswordCancel}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                {!showPasswordForm && passwordSuccess ? (
+                  <p className="mt-2 text-[10px] text-[#1f7a3a]">{passwordSuccess}</p>
+                ) : null}
+              </div>
+
+              <button
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-full border border-[#ffd1d1] bg-[#fff6f6] py-2 text-[11px] font-semibold text-[#e24c3b]"
+                type="button"
+                onClick={() => {
+                  logout();
+                  navigate('/login', { replace: true });
+                }}
+              >
                 <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                   <path
                     d="M8 4h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8"

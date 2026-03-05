@@ -1,15 +1,11 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './context/AuthContext.jsx';
-import Forgot from './pages/Forgot.jsx';
-import ForgotSent from './pages/ForgotSent.jsx';
 import Home from './pages/Home.jsx';
 import Login from './pages/Login.jsx';
 import Checkout from './pages/Checkout.jsx';
 import MenuItem from './pages/MenuItem.jsx';
 import Orders from './pages/Orders.jsx';
 import Register from './pages/Register.jsx';
-import Reset from './pages/Reset.jsx';
-import ResetSuccess from './pages/ResetSuccess.jsx';
 import Profile from './pages/Profile.jsx';
 
 function ProtectedRoute({ children }) {
@@ -73,10 +69,6 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/forgot" element={<Forgot />} />
-        <Route path="/forgot/sent" element={<ForgotSent />} />
-        <Route path="/reset" element={<Reset />} />
-        <Route path="/reset/success" element={<ResetSuccess />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </div>

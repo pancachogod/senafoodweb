@@ -26,23 +26,10 @@ export function updateMe(token, payload) {
   });
 }
 
-export function requestPasswordReset(value) {
-  return apiRequest('/auth/password/forgot', {
+export function changePassword(token, payload) {
+  return apiRequest('/auth/password/change', {
     method: 'POST',
-    body: { value },
-  });
-}
-
-export function validatePasswordReset(token) {
-  return apiRequest('/auth/password/validate', {
-    method: 'POST',
-    body: { token },
-  });
-}
-
-export function confirmPasswordReset(token, password) {
-  return apiRequest('/auth/password/reset', {
-    method: 'POST',
-    body: { token, password },
+    body: payload,
+    token,
   });
 }

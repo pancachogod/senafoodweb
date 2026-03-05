@@ -51,15 +51,6 @@ class Settings:
         self.access_token_expire_minutes = int(
             os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440")
         )
-        self.password_reset_expire_minutes = int(
-            os.getenv("PASSWORD_RESET_EXPIRE_MINUTES", "60")
-        )
-        self.gmail_user = os.getenv("GMAIL_USER", "")
-        self.gmail_app_password = os.getenv("GMAIL_APP_PASSWORD", "")
-        self.frontend_reset_url = os.getenv(
-            "FRONTEND_RESET_URL",
-            "https://senafoodweb.vercel.app/forgot/sent",
-        )
         cors_env = os.getenv("CORS_ORIGINS", "")
         self.cors_origins = parse_cors_origins(cors_env)
         self.env = os.getenv("ENV", "dev")

@@ -72,9 +72,6 @@ export default function Login() {
           registrate
         </Link>
       </div>
-      <Link className="mt-1 text-[11px] text-[#3f6df5]" to="/forgot">
-        ¿Has olvidado tu contraseña
-      </Link>
     </AuthLayout>
   );
 }
