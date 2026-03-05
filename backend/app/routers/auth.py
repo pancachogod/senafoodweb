@@ -1,8 +1,12 @@
+from email.message import EmailMessage
+
+import aiosmtplib
 from fastapi import APIRouter, Depends, HTTPException, status
 from jose import JWTError
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
+from ..config import get_settings
 from ..db import get_db
 from ..deps import get_current_user
 from ..models import User
@@ -25,6 +29,46 @@ from ..security import (
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+async def send_password_reset_email(to_email: str, reset_link: str) -> None:
+    settings = get_settings()
+    if not settings.gmail_user or not settings.gmail_app_password:
+        raise RuntimeError("Faltan GMAIL_USER o GMAIL_APP_PASSWORD")
+
+    msg = EmailMessage()
+    msg["From"] = f"SenaFood <{settings.gmail_user}>"
+    msg["To"] = to_email
+    msg["Subject"] = "Restablecer contrasena"
+    msg.set_content("Abre este correo en un cliente que soporte HTML.")
+    msg.add_alternative(
+        f"""
+        <div style="font-family: Arial, sans-serif; line-height: 1.4;">
+          <h2>Restablecer contrasena</h2>
+          <p>Recibimos una solicitud para restablecer la contrasena de tu cuenta.</p>
+          <p>
+            <a href="{reset_link}"
+               style="display:inline-block;padding:10px 14px;text-decoration:none;border-radius:10px;border:1px solid #ddd;">
+              Crear nueva contrasena
+            </a>
+          </p>
+          <p><b>Este enlace expirara en una hora.</b></p>
+          <p>Si no solicitaste este cambio, ignora este correo.</p>
+          <p>Saludos cordiales,</p>
+        </div>
+        """,
+        subtype="html",
+    )
+
+    await aiosmtplib.send(
+        msg,
+        hostname="smtp.gmail.com",
+        port=587,
+        start_tls=True,
+        username=settings.gmail_user,
+        password=settings.gmail_app_password,
+        timeout=20,
+    )
 
 
 @router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
@@ -63,7 +107,7 @@ def login(payload: UserLogin, db: Session = Depends(get_db)) -> TokenResponse:
 
 
 @router.post("/password/forgot")
-def request_password_reset(
+async def request_password_reset(
     payload: PasswordResetRequest, db: Session = Depends(get_db)
 ) -> dict:
     value = payload.value.strip()
@@ -76,9 +120,22 @@ def request_password_reset(
         select(User).where(or_(User.email == value, User.document == value))
     )
     if not user or not user.is_active:
-        return {"token": None, "email": None}
+        return {
+            "message": "Si el correo existe, te llegara un enlace de recuperacion.",
+        }
     token = create_password_reset_token(str(user.id))
-    return {"token": token, "email": user.email}
+    settings = get_settings()
+    base_url = settings.frontend_reset_url.strip()
+    separator = "&" if "?" in base_url else "?"
+    reset_link = f"{base_url}{separator}token={token}"
+    try:
+        await send_password_reset_email(user.email, reset_link)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="No se pudo enviar el correo.",
+        )
+    return {"message": "Si el correo existe, te llegara un enlace de recuperacion."}
 
 
 @router.post("/password/validate")
