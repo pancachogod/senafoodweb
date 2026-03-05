@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import CartDrawer from '../components/CartDrawer.jsx';
-import { cart, logo, profile } from '../assets/index.js';
+import { cart, logo, profile, qr } from '../assets/index.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useOrders } from '../context/OrdersContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -44,6 +44,30 @@ const formatTime = (value) => {
     minute: '2-digit',
     hour12: true,
   });
+};
+
+const loadImageData = async (src) => {
+  if (!src) return null;
+  try {
+    const response = await fetch(src);
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+    const image = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = dataUrl;
+    });
+    return { dataUrl, width: image.width, height: image.height };
+  } catch (error) {
+    return null;
+  }
 };
 
 export default function Orders() {
@@ -134,8 +158,9 @@ export default function Orders() {
     return `recibo-${tokenPart || 'pedido'}${dateLabel ? `-${dateLabel}` : ''}.pdf`;
   };
 
-  const handleDownloadReceipt = (order) => {
+  const handleDownloadReceipt = async (order) => {
     if (!order) return;
+    const [logoData, qrData] = await Promise.all([loadImageData(logo), loadImageData(qr)]);
 
     const doc = new jsPDF({ unit: 'pt', format: 'a4' });
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -151,10 +176,27 @@ export default function Orders() {
       }
     };
 
+    let headerHeight = 0;
+    if (logoData?.dataUrl) {
+      const maxLogoWidth = 120;
+      const maxLogoHeight = 48;
+      const logoScale = Math.min(
+        maxLogoWidth / logoData.width,
+        maxLogoHeight / logoData.height,
+        1
+      );
+      const logoWidth = logoData.width * logoScale;
+      const logoHeight = logoData.height * logoScale;
+      doc.addImage(logoData.dataUrl, 'PNG', margin, y, logoWidth, logoHeight);
+      headerHeight = logoHeight;
+    }
+
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
-    doc.text('Recibo de compra', margin, y);
-    y += 20;
+    doc.text('Recibo de compra', pageWidth - margin, y + 18, { align: 'right' });
+    headerHeight = Math.max(headerHeight, 24);
+    y += headerHeight + 10;
+
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     doc.text('Sena Food', margin, y);
@@ -248,6 +290,17 @@ export default function Orders() {
     y += 24;
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
+
+    if (qrData?.dataUrl) {
+      const qrSize = 96;
+      ensureSpace(qrSize + 16);
+      const qrX = pageWidth - margin - qrSize;
+      const qrY = y;
+      doc.addImage(qrData.dataUrl, 'PNG', qrX, qrY, qrSize, qrSize);
+      doc.text('QR', qrX + qrSize / 2, qrY + qrSize + 12, { align: 'center' });
+      y += qrSize + 20;
+    }
+
     doc.text('Gracias por tu compra.', margin, y);
 
     doc.save(buildReceiptFileName(order));
