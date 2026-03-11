@@ -33,3 +33,24 @@ export function changePassword(token, payload) {
     token,
   });
 }
+
+export function requestPasswordReset(identifier) {
+  return apiRequest('/auth/password-reset/request', {
+    method: 'POST',
+    body: { identifier },
+  });
+}
+
+export function validatePasswordResetToken(token) {
+  return apiRequest('/auth/password-reset/validate', {
+    method: 'POST',
+    body: { token },
+  });
+}
+
+export function confirmPasswordReset(token, password) {
+  return apiRequest('/auth/password-reset/confirm', {
+    method: 'POST',
+    body: { token, password },
+  });
+}

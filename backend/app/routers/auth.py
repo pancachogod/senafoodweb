@@ -1,13 +1,22 @@
+from datetime import datetime, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from ..config import get_settings
 from ..db import get_db
 from ..deps import get_current_user
-from ..models import User
+from ..email import send_password_reset_email
+from ..models import PasswordResetToken, User
 from ..schemas import (
     PasswordChangeRequest,
+    PasswordResetConfirm,
+    PasswordResetRequest,
+    PasswordResetResponse,
+    PasswordResetTokenStatus,
+    PasswordResetTokenValidation,
     TokenResponse,
     UserCreate,
     UserLogin,
@@ -20,6 +29,7 @@ from ..security import (
     is_valid_password,
     verify_password,
 )
+from ..utils import generate_password_reset_token, hash_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -107,6 +117,116 @@ def change_password(
     current_user.password_hash = get_password_hash(payload.new_password)
     db.commit()
     return {"status": "ok"}
+
+
+@router.post("/password-reset/request", response_model=PasswordResetResponse)
+def request_password_reset(
+    payload: PasswordResetRequest,
+    db: Session = Depends(get_db),
+) -> PasswordResetResponse:
+    identifier = payload.identifier.strip()
+    if not identifier:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El correo o documento es obligatorio.",
+        )
+
+    user = None
+    if "@" in identifier:
+        user = db.scalar(select(User).where(User.email == identifier))
+    if not user:
+        user = db.scalar(select(User).where(User.document == identifier))
+
+    if user:
+        settings = get_settings()
+        raw_token, token_hash = generate_password_reset_token()
+        expires_at = datetime.utcnow() + timedelta(
+            minutes=settings.password_reset_expire_minutes
+        )
+        token_entry = PasswordResetToken(
+            user_id=user.id,
+            token_hash=token_hash,
+            expires_at=expires_at,
+        )
+        db.add(token_entry)
+        db.commit()
+
+        reset_link = f"{settings.frontend_url}/reset?token={raw_token}"
+        try:
+            send_password_reset_email(user.email, user.name, reset_link)
+        except Exception:
+            pass
+
+    return PasswordResetResponse()
+
+
+@router.post("/password-reset/validate", response_model=PasswordResetTokenStatus)
+def validate_password_reset_token(
+    payload: PasswordResetTokenValidation,
+    db: Session = Depends(get_db),
+) -> PasswordResetTokenStatus:
+    token = payload.token.strip()
+    if not token:
+        return PasswordResetTokenStatus(valid=False)
+    token_hash = hash_token(token)
+    token_entry = db.scalar(
+        select(PasswordResetToken).where(PasswordResetToken.token_hash == token_hash)
+    )
+    if not token_entry:
+        return PasswordResetTokenStatus(valid=False)
+    if token_entry.used_at:
+        return PasswordResetTokenStatus(valid=False)
+    if token_entry.expires_at < datetime.utcnow():
+        return PasswordResetTokenStatus(valid=False)
+    return PasswordResetTokenStatus(valid=True, expires_at=token_entry.expires_at)
+
+
+@router.post("/password-reset/confirm", response_model=PasswordResetResponse)
+def confirm_password_reset(
+    payload: PasswordResetConfirm,
+    db: Session = Depends(get_db),
+) -> PasswordResetResponse:
+    token = payload.token.strip()
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El enlace no es valido.",
+        )
+    token_hash = hash_token(token)
+    token_entry = db.scalar(
+        select(PasswordResetToken).where(PasswordResetToken.token_hash == token_hash)
+    )
+    if not token_entry:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El enlace no es valido.",
+        )
+    if token_entry.used_at:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="El enlace ya fue usado.",
+        )
+    if token_entry.expires_at < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="El enlace ha expirado.",
+        )
+    if not is_valid_password(payload.password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La contrasena debe tener al menos 6 caracteres y una mayuscula.",
+        )
+
+    user = token_entry.user
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El usuario no existe.",
+        )
+    user.password_hash = get_password_hash(payload.password)
+    token_entry.used_at = datetime.utcnow()
+    db.commit()
+    return PasswordResetResponse()
 
 
 @router.get("/me", response_model=UserPublic)

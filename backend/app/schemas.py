@@ -45,6 +45,28 @@ class PasswordChangeRequest(BaseModel):
     new_password: str = Field(min_length=6)
 
 
+class PasswordResetRequest(BaseModel):
+    identifier: str
+
+
+class PasswordResetResponse(BaseModel):
+    status: str = "ok"
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    password: str = Field(min_length=6)
+
+
+class PasswordResetTokenValidation(BaseModel):
+    token: str
+
+
+class PasswordResetTokenStatus(BaseModel):
+    valid: bool
+    expires_at: datetime | None = None
+
+
 class ProductCreate(BaseModel):
     name: str
     description: str | None = ""

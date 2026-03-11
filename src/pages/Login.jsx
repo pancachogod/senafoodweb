@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
 import TextInput from '../components/TextInput.jsx';
+import { requestPasswordReset } from '../api/auth.js';
 import { logo } from '../assets/index.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
@@ -16,6 +17,7 @@ export default function Login() {
   const [view, setView] = useState('login');
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryError, setRecoveryError] = useState('');
+  const [isRecoverySubmitting, setIsRecoverySubmitting] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -42,24 +44,33 @@ export default function Login() {
     setView('recover');
   };
 
-  const handleRecoverySubmit = (event) => {
+  const handleRecoverySubmit = async (event) => {
     event.preventDefault();
     if (!recoveryEmail.trim()) {
       setRecoveryError('Ingresa tu correo o documento.');
       return;
     }
     setRecoveryError('');
-    setView('recover-sent');
+    setIsRecoverySubmitting(true);
+    try {
+      await requestPasswordReset(recoveryEmail.trim());
+      setView('recover-sent');
+    } catch (err) {
+      setRecoveryError(err?.message || 'No se pudo enviar el enlace.');
+    } finally {
+      setIsRecoverySubmitting(false);
+    }
   };
 
   const handleRecoveryContinue = () => {
-    navigate('/reset');
+    handleBackToLogin();
   };
 
   const handleBackToLogin = () => {
     setView('login');
     setRecoveryEmail('');
     setRecoveryError('');
+    setIsRecoverySubmitting(false);
     setError('');
   };
 
@@ -130,6 +141,7 @@ export default function Login() {
                   }
                 }}
                 autoComplete="email"
+                disabled={isRecoverySubmitting}
               />
               {recoveryError ? (
                 <div className="flex w-full items-center justify-center gap-2 text-[11px] text-[#e24c3b]">
@@ -139,8 +151,11 @@ export default function Login() {
                   <span>{recoveryError}</span>
                 </div>
               ) : null}
-              <PrimaryButton type="submit" disabled={!recoveryEmail.trim()}>
-                ENVIAR ENLACE
+              <PrimaryButton
+                type="submit"
+                disabled={!recoveryEmail.trim() || isRecoverySubmitting}
+              >
+                {isRecoverySubmitting ? 'ENVIANDO...' : 'ENVIAR ENLACE'}
               </PrimaryButton>
             </form>
           ) : null}
