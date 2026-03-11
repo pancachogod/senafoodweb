@@ -16,11 +16,6 @@ export default function Login() {
   const [view, setView] = useState('login');
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryError, setRecoveryError] = useState('');
-  const [resetPassword, setResetPassword] = useState('');
-  const [resetConfirm, setResetConfirm] = useState('');
-  const [resetError, setResetError] = useState('');
-
-  const isValidPassword = (value) => value.length >= 6 && /[A-Z]/.test(value);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -58,34 +53,13 @@ export default function Login() {
   };
 
   const handleRecoveryContinue = () => {
-    setView('recover-reset');
-  };
-
-  const handleResetSubmit = (event) => {
-    event.preventDefault();
-    if (!resetPassword || !resetConfirm) {
-      setResetError('Completa todos los campos.');
-      return;
-    }
-    if (resetPassword !== resetConfirm) {
-      setResetError('Las contrasenas no coinciden.');
-      return;
-    }
-    if (!isValidPassword(resetPassword)) {
-      setResetError('La contrasena debe tener al menos 6 caracteres y una mayuscula.');
-      return;
-    }
-    setResetError('');
-    setView('recover-success');
+    navigate('/reset');
   };
 
   const handleBackToLogin = () => {
     setView('login');
     setRecoveryEmail('');
     setRecoveryError('');
-    setResetPassword('');
-    setResetConfirm('');
-    setResetError('');
     setError('');
   };
 
@@ -199,49 +173,6 @@ export default function Login() {
                 Continuar
               </PrimaryButton>
             </div>
-          ) : null}
-          {view === 'recover-reset' ? (
-            <form className="flex w-full flex-col items-center gap-3" onSubmit={handleResetSubmit}>
-              <TextInput
-                label="Nueva contraseña"
-                name="reset-password"
-                type="password"
-                placeholder="Ingrese su contraseña"
-                value={resetPassword}
-                onChange={(value) => {
-                  setResetPassword(value);
-                  if (resetError) {
-                    setResetError('');
-                  }
-                }}
-                autoComplete="new-password"
-              />
-              <TextInput
-                label="Confirmar contraseña"
-                name="reset-confirm"
-                type="password"
-                placeholder="Ingrese su contraseña"
-                value={resetConfirm}
-                onChange={(value) => {
-                  setResetConfirm(value);
-                  if (resetError) {
-                    setResetError('');
-                  }
-                }}
-                autoComplete="new-password"
-              />
-              {resetError ? (
-                <div className="flex w-full items-center justify-center gap-2 text-[11px] text-[#e24c3b]">
-                  <span className="flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#e24c3b] text-[10px] text-white">
-                    ×
-                  </span>
-                  <span>{resetError}</span>
-                </div>
-              ) : null}
-              <PrimaryButton type="submit" disabled={!resetPassword || !resetConfirm}>
-                RESTABLECER CONTRASEÑA
-              </PrimaryButton>
-            </form>
           ) : null}
           {view === 'recover-success' ? (
             <div className="flex w-full max-w-[320px] flex-col items-center gap-3 rounded-[26px] bg-white px-6 py-6 text-center shadow-card">
