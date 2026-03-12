@@ -139,9 +139,10 @@ export default function Register() {
           message = fallback.error;
         }
       }
+      const cleanMessage = message.includes('EmailJS no configurado') ? '' : message;
       setVerificationLink(link);
       setEmailSent(sent);
-      setResendStatus(message || '');
+      setResendStatus(sent ? '' : cleanMessage || 'No se pudo enviar el correo.');
       setView('verify');
     } catch (err) {
       setError(err?.message || 'No se pudo crear la cuenta.');
@@ -167,11 +168,10 @@ export default function Register() {
           message = fallback.error;
         }
       }
+      const cleanMessage = message.includes('EmailJS no configurado') ? '' : message;
       setVerificationLink(link);
       setEmailSent(sent);
-      setResendStatus(
-        sent ? 'Correo reenviado correctamente.' : message || 'No se pudo reenviar el correo.'
-      );
+      setResendStatus(sent ? 'Correo reenviado correctamente.' : cleanMessage || 'No se pudo reenviar el correo.');
     } catch (err) {
       setResendStatus(err?.message || 'No se pudo reenviar el correo.');
     } finally {
@@ -294,24 +294,6 @@ export default function Register() {
             <p className="text-[10px] text-muted">
               Revisa la carpeta de spam o correo no deseado.
             </p>
-            {verificationLink ? (
-              <div className="w-full rounded-[12px] border border-[#eadfd5] bg-white px-3 py-2 text-[10px] text-title">
-                <span className="break-all">{verificationLink}</span>
-                <button
-                  className="mt-2 text-[10px] font-semibold text-orange"
-                  type="button"
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(verificationLink);
-                    } catch (copyError) {
-                      return;
-                    }
-                  }}
-                >
-                  Copiar enlace
-                </button>
-              </div>
-            ) : null}
             <div className="flex w-full flex-col items-center gap-2">
               <button
                 className="rounded-full border border-[#eadfd5] bg-white px-4 py-2 text-[11px] font-semibold text-title"
