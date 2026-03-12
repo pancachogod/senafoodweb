@@ -26,6 +26,7 @@ export default function Register() {
   const [showTerms, setShowTerms] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [view, setView] = useState('form');
   const passwordHasMinLength = password.length >= 6;
   const passwordHasUppercase = /[A-Z]/.test(password);
   const panelClassName =
@@ -63,7 +64,7 @@ export default function Register() {
         document,
         password,
       });
-      navigate('/home');
+      setView('verify');
     } catch (err) {
       setError(err?.message || 'No se pudo crear la cuenta.');
     } finally {
@@ -74,98 +75,113 @@ export default function Register() {
   return (
     <AuthSplitLayout>
       <div className={`${panelClassName} flex flex-col items-center gap-4`}>
-        <form className="flex w-full flex-col items-stretch gap-3" onSubmit={handleSubmit}>
-          <TextInput
-            label="Numero de documento"
-            name="document"
-            placeholder="Ingresa tu numero de documento"
-            value={document}
-            onChange={(value) => setDocument(sanitizeDocument(value))}
-            autoComplete="off"
-            inputMode="numeric"
-            maxLength={11}
-          />
-          <TextInput
-            label="Nombre completo"
-            name="name"
-            placeholder="Ingresa tu nombre Completo"
-            value={name}
-            onChange={(value) => setName(sanitizeName(value))}
-            autoComplete="name"
-          />
-          <TextInput
-            label="Numero de telefono"
-            name="phone"
-            placeholder="Ingresa tu numero de telefono"
-            value={phone}
-            onChange={(value) => setPhone(sanitizeDigits(value))}
-            autoComplete="tel"
-            inputMode="numeric"
-            maxLength={10}
-          />
-          <TextInput
-            label="Correo electronico"
-            name="email"
-            type="email"
-            placeholder="Ingresa tu correo electronico"
-            value={email}
-            onChange={setEmail}
-            autoComplete="email"
-          />
-          <TextInput
-            label="Contraseña"
-            name="password"
-            type="password"
-            placeholder="Crea una contraseña"
-            value={password}
-            onChange={setPassword}
-            autoComplete="new-password"
-          />
-          <div className="w-full space-y-1 text-[11px]">
-            <div
-              className={`flex items-center gap-2 ${
-                passwordHasMinLength ? 'text-[#2f9e44]' : 'text-[#d84b2b]'
-              }`}
-            >
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  passwordHasMinLength ? 'bg-[#2f9e44]' : 'bg-[#d84b2b]'
-                }`}
+        {view === 'form' ? (
+          <>
+            <form className="flex w-full flex-col items-stretch gap-3" onSubmit={handleSubmit}>
+              <TextInput
+                label="Numero de documento"
+                name="document"
+                placeholder="Ingresa tu numero de documento"
+                value={document}
+                onChange={(value) => setDocument(sanitizeDocument(value))}
+                autoComplete="off"
+                inputMode="numeric"
+                maxLength={11}
               />
-              <span>Min. 6 caracteres</span>
-            </div>
-            <div
-              className={`flex items-center gap-2 ${
-                passwordHasUppercase ? 'text-[#2f9e44]' : 'text-[#d84b2b]'
-              }`}
-            >
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  passwordHasUppercase ? 'bg-[#2f9e44]' : 'bg-[#d84b2b]'
-                }`}
+              <TextInput
+                label="Nombre completo"
+                name="name"
+                placeholder="Ingresa tu nombre Completo"
+                value={name}
+                onChange={(value) => setName(sanitizeName(value))}
+                autoComplete="name"
               />
-              <span>1 mayuscula</span>
-            </div>
-          </div>
-          <div className="flex w-full justify-center">
-            <Checkbox
-              label="Aceptar terminos y condiciones"
-              checked={acceptedTerms}
-              onChange={() => setShowTerms(true)}
-            />
-          </div>
-          {error ? (
-            <div className="text-center text-[11px] text-[#e24c3b]">{error}</div>
-          ) : null}
-          <div className="flex w-full justify-center">
-            <PrimaryButton type="submit" disabled={!acceptedTerms || isSubmitting}>
-              {isSubmitting ? 'REGISTRANDO...' : 'REGISTRARME'}
+              <TextInput
+                label="Numero de telefono"
+                name="phone"
+                placeholder="Ingresa tu numero de telefono"
+                value={phone}
+                onChange={(value) => setPhone(sanitizeDigits(value))}
+                autoComplete="tel"
+                inputMode="numeric"
+                maxLength={10}
+              />
+              <TextInput
+                label="Correo electronico"
+                name="email"
+                type="email"
+                placeholder="Ingresa tu correo electronico"
+                value={email}
+                onChange={setEmail}
+                autoComplete="email"
+              />
+              <TextInput
+                label="Contraseña"
+                name="password"
+                type="password"
+                placeholder="Crea una contraseña"
+                value={password}
+                onChange={setPassword}
+                autoComplete="new-password"
+              />
+              <div className="w-full space-y-1 text-[11px]">
+                <div
+                  className={`flex items-center gap-2 ${
+                    passwordHasMinLength ? 'text-[#2f9e44]' : 'text-[#d84b2b]'
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      passwordHasMinLength ? 'bg-[#2f9e44]' : 'bg-[#d84b2b]'
+                    }`}
+                  />
+                  <span>Min. 6 caracteres</span>
+                </div>
+                <div
+                  className={`flex items-center gap-2 ${
+                    passwordHasUppercase ? 'text-[#2f9e44]' : 'text-[#d84b2b]'
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      passwordHasUppercase ? 'bg-[#2f9e44]' : 'bg-[#d84b2b]'
+                    }`}
+                  />
+                  <span>1 mayuscula</span>
+                </div>
+              </div>
+              <div className="flex w-full justify-center">
+                <Checkbox
+                  label="Aceptar terminos y condiciones"
+                  checked={acceptedTerms}
+                  onChange={() => setShowTerms(true)}
+                />
+              </div>
+              {error ? (
+                <div className="text-center text-[11px] text-[#e24c3b]">{error}</div>
+              ) : null}
+              <div className="flex w-full justify-center">
+                <PrimaryButton type="submit" disabled={!acceptedTerms || isSubmitting}>
+                  {isSubmitting ? 'REGISTRANDO...' : 'REGISTRARME'}
+                </PrimaryButton>
+              </div>
+            </form>
+            <Link className="text-[12px] uppercase tracking-[0.4px] text-[#e75a1a]" to="/login">
+              ¿YA TIENES UNA CUENTA?
+            </Link>
+          </>
+        ) : (
+          <div className="flex w-full flex-col items-center gap-3 text-center">
+            <h2 className="text-[14px] font-semibold text-title">Verifica tu cuenta</h2>
+            <p className="text-[11px] text-text">
+              Te enviamos un enlace de activacion a <strong>{email}</strong>. Debes
+              verificar tu cuenta para poder iniciar sesion.
+            </p>
+            <PrimaryButton type="button" className="max-w-[200px]" onClick={() => navigate('/login')}>
+              Ir a iniciar sesion
             </PrimaryButton>
           </div>
-        </form>
-        <Link className="text-[12px] uppercase tracking-[0.4px] text-[#e75a1a]" to="/login">
-          ¿YA TIENES UNA CUENTA?
-        </Link>
+        )}
       </div>
       {showTerms ? (
         <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">

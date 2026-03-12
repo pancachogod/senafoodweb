@@ -29,6 +29,7 @@ class UserPublic(BaseModel):
     phone: str
     document: str
     role: str
+    is_verified: bool
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
@@ -68,6 +69,14 @@ class PasswordResetTokenValidation(BaseModel):
 class PasswordResetTokenStatus(BaseModel):
     valid: bool
     expires_at: datetime | None = None
+
+
+class EmailVerificationConfirm(BaseModel):
+    token: str
+
+
+class EmailVerificationResponse(BaseModel):
+    status: str = "ok"
 
 
 class ProductCreate(BaseModel):

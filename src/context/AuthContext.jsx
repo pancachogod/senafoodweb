@@ -82,8 +82,7 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (payload) => {
-    await registerRequest(payload);
-    return login(payload.email, payload.password);
+    return registerRequest(payload);
   };
 
   const updateProfile = async (payload) => {

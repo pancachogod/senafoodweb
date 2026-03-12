@@ -8,9 +8,11 @@ from sqlalchemy.orm import Session
 from ..config import get_settings
 from ..db import get_db
 from ..deps import get_current_user
-from ..email import send_password_reset_email
-from ..models import PasswordResetToken, User
+from ..email import send_account_verification_email, send_password_reset_email
+from ..models import EmailVerificationToken, PasswordResetToken, User
 from ..schemas import (
+    EmailVerificationConfirm,
+    EmailVerificationResponse,
     PasswordChangeRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
@@ -66,6 +68,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> UserPublic:
         phone=payload.phone,
         document=payload.document,
         password_hash=get_password_hash(payload.password),
+        is_verified=False,
     )
     try:
         db.add(user)
@@ -77,6 +80,23 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> UserPublic:
             status_code=status.HTTP_409_CONFLICT,
             detail="El correo, telefono o documento ya esta registrado.",
         ) from None
+    settings = get_settings()
+    raw_token, token_hash = generate_password_reset_token()
+    expire_minutes = settings.account_verification_expire_minutes
+    if expire_minutes <= 0:
+        expires_at = datetime.utcnow() + timedelta(days=365 * 100)
+    else:
+        expires_at = datetime.utcnow() + timedelta(minutes=expire_minutes)
+    token_entry = EmailVerificationToken(
+        user_id=user.id,
+        token_hash=token_hash,
+        expires_at=expires_at,
+    )
+    db.add(token_entry)
+    db.commit()
+
+    verify_link = f"{settings.frontend_url}/verify?token={raw_token}"
+    send_account_verification_email(user.email, user.name, verify_link, raw_token)
     return user
 
 
@@ -88,9 +108,63 @@ def login(payload: UserLogin, db: Session = Depends(get_db)) -> TokenResponse:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials",
         )
+    if not user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cuenta no verificada. Revisa tu correo para activarla.",
+        )
 
     token = create_access_token(str(user.id))
     return TokenResponse(access_token=token, user=user)
+
+
+@router.post("/verify/confirm", response_model=EmailVerificationResponse)
+def confirm_email_verification(
+    payload: EmailVerificationConfirm,
+    db: Session = Depends(get_db),
+) -> EmailVerificationResponse:
+    token = payload.token.strip()
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El enlace no es valido.",
+        )
+    token_hash = hash_token(token)
+    token_entry = db.scalar(
+        select(EmailVerificationToken).where(
+            EmailVerificationToken.token_hash == token_hash
+        )
+    )
+    if not token_entry:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El enlace no es valido.",
+        )
+    if token_entry.used_at:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="El enlace ya fue usado.",
+        )
+    settings = get_settings()
+    if (
+        settings.account_verification_expire_minutes > 0
+        and token_entry.expires_at < datetime.utcnow()
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_410_GONE,
+            detail="El enlace ha expirado.",
+        )
+
+    user = token_entry.user
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="El usuario no existe.",
+        )
+    user.is_verified = True
+    token_entry.used_at = datetime.utcnow()
+    db.commit()
+    return EmailVerificationResponse()
 
 
 @router.post("/password/change")

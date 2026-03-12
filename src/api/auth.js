@@ -54,3 +54,10 @@ export function confirmPasswordReset(token, password) {
     body: { token, password },
   });
 }
+
+export function confirmAccountVerification(token) {
+  return apiRequest('/auth/verify/confirm', {
+    method: 'POST',
+    body: { token },
+  });
+}

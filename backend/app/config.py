@@ -57,10 +57,14 @@ class Settings:
         self.password_reset_expire_minutes = int(
             os.getenv("PASSWORD_RESET_EXPIRE_MINUTES", "0")
         )
+        self.account_verification_expire_minutes = int(
+            os.getenv("ACCOUNT_VERIFICATION_EXPIRE_MINUTES", "0")
+        )
         self.emailjs_public_key = os.getenv("EMAILJS_PUBLIC_KEY", "")
         self.emailjs_private_key = os.getenv("EMAILJS_PRIVATE_KEY", "")
         self.emailjs_service_id = os.getenv("EMAILJS_SERVICE_ID", "")
         self.emailjs_template_id = os.getenv("EMAILJS_TEMPLATE_ID", "")
+        self.emailjs_verify_template_id = os.getenv("EMAILJS_VERIFY_TEMPLATE_ID", "")
         cors_env = os.getenv("CORS_ORIGINS", "")
         self.cors_origins = parse_cors_origins(cors_env)
         self.env = os.getenv("ENV", "dev")
