@@ -29,7 +29,7 @@ export default function Register() {
   const passwordHasMinLength = password.length >= 6;
   const passwordHasUppercase = /[A-Z]/.test(password);
   const panelClassName =
-    'w-full max-w-[460px] rounded-[26px] border border-[#d1b09a] bg-white/70 px-6 py-6 shadow-[0_10px_26px_rgba(0,0,0,0.12)] backdrop-blur-md sm:px-7 sm:py-7';
+    'w-full max-w-[460px] rounded-[26px] border border-white/55 bg-white/55 px-6 py-6 shadow-[0_18px_50px_rgba(0,0,0,0.2)] backdrop-blur-xl sm:px-7 sm:py-7';
 
   const handleSubmit = async (event) => {
     event.preventDefault();
