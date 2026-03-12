@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { cart, logo, profile } from '../assets/index.js';
 import CartDrawer from '../components/CartDrawer.jsx';
@@ -30,12 +30,41 @@ export default function MenuItem() {
   const [selectedImage, setSelectedImage] = useState(gallery[0]);
   const [quantity, setQuantity] = useState(1);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [buyButtonWidth, setBuyButtonWidth] = useState(0);
+  const quantityRowRef = useRef(null);
   const { items, addItem, increaseItem, decreaseItem, removeItem, itemCount, total } = useCart();
 
   useEffect(() => {
     setSelectedImage(gallery[0]);
     setQuantity(1);
   }, [gallery]);
+
+  useEffect(() => {
+    if (gallery.length <= 1) return;
+    const timer = window.setInterval(() => {
+      setSelectedImage((prev) => {
+        const currentIndex = gallery.indexOf(prev);
+        const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % gallery.length;
+        return gallery[nextIndex];
+      });
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [gallery]);
+
+  useEffect(() => {
+    if (!quantityRowRef.current) return;
+    setBuyButtonWidth(quantityRowRef.current.offsetWidth);
+  }, [quantity]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (!quantityRowRef.current) return;
+      setBuyButtonWidth(quantityRowRef.current.offsetWidth);
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     let isActive = true;
@@ -170,7 +199,7 @@ export default function MenuItem() {
                 </div>
               </div>
 
-              <div className="flex flex-col items-stretch lg:pt-6">
+              <div className="flex flex-col items-start lg:pt-6">
                 <h1 className="text-[22px] font-semibold text-title sm:text-[26px]">
                   {product?.name}
                 </h1>
@@ -186,7 +215,7 @@ export default function MenuItem() {
 
                 <div className="mt-4">
                   <span className="text-[11px] text-muted">Cantidad</span>
-                  <div className="mt-2 flex items-center gap-4">
+                  <div className="mt-2 inline-flex items-center gap-4" ref={quantityRowRef}>
                     <button
                       className="flex h-7 w-7 items-center justify-center rounded-full border border-[#e3d6cb] bg-white text-[14px] text-title shadow-[0_4px_8px_rgba(0,0,0,0.08)]"
                       type="button"
@@ -208,9 +237,10 @@ export default function MenuItem() {
                 </div>
 
                 <button
-                  className="mt-5 w-full max-w-none rounded-full bg-orange py-2.5 text-[12px] font-semibold text-white shadow-[0_8px_16px_rgba(242,106,29,0.24)]"
+                  className="mt-5 rounded-full bg-orange py-2.5 text-[12px] font-semibold text-white shadow-[0_8px_16px_rgba(242,106,29,0.24)]"
                   type="button"
                   onClick={handleBuy}
+                  style={buyButtonWidth ? { width: buyButtonWidth } : undefined}
                 >
                   Comprar
                 </button>
