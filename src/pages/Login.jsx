@@ -36,18 +36,30 @@ export default function Login() {
   }, [canSendEmailJs, emailJsConfig.publicKey]);
 
   const sendResetEmail = async (toEmail, resetLink) => {
-    if (!canSendEmailJs || !resetLink) return false;
-    await emailjs.send(emailJsConfig.serviceId, emailJsConfig.templateId, {
-      to_email: toEmail,
-      to_name: 'Usuario',
-      email: toEmail,
-      user_email: toEmail,
-      from_name: 'SENA FOOD',
-      reply_to: toEmail,
-      reset_link: resetLink,
-      app_name: 'SENA FOOD',
-    });
-    return true;
+    if (!canSendEmailJs || !resetLink) {
+      return { sent: false, error: 'EmailJS no configurado.' };
+    }
+    try {
+      await emailjs.send(emailJsConfig.serviceId, emailJsConfig.templateId, {
+        to_email: toEmail,
+        to_name: 'Usuario',
+        email: toEmail,
+        user_email: toEmail,
+        name: 'Usuario',
+        user_name: 'Usuario',
+        from_email: toEmail,
+        from_name: 'SENA FOOD',
+        reply_to: toEmail,
+        reset_link: resetLink,
+        app_name: 'SENA FOOD',
+      });
+      return { sent: true };
+    } catch (err) {
+      return {
+        sent: false,
+        error: err?.text || err?.message || 'Error al enviar con EmailJS.',
+      };
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -87,9 +99,16 @@ export default function Login() {
       const response = await requestPasswordReset(recoveryEmail.trim());
       let sent = Boolean(response?.email_sent);
       if (!sent && response?.reset_link && canSendEmailJs && recoveryEmail.includes('@')) {
-        sent = await sendResetEmail(recoveryEmail.trim(), response.reset_link);
+        const fallback = await sendResetEmail(recoveryEmail.trim(), response.reset_link);
+        sent = fallback.sent;
+        if (!sent && fallback.error) {
+          throw new Error(fallback.error);
+        }
       }
       if (!sent) {
+        if (!response?.reset_link) {
+          throw new Error('No encontramos ese correo o documento.');
+        }
         throw new Error('No se pudo enviar el enlace.');
       }
       setView('recover-sent');
