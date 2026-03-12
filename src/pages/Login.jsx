@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
@@ -29,23 +29,24 @@ export default function Login() {
     emailJsConfig.serviceId && emailJsConfig.templateId && emailJsConfig.publicKey
   );
 
+  useEffect(() => {
+    if (canSendEmailJs) {
+      emailjs.init({ publicKey: emailJsConfig.publicKey });
+    }
+  }, [canSendEmailJs, emailJsConfig.publicKey]);
+
   const sendResetEmail = async (toEmail, resetLink) => {
     if (!canSendEmailJs || !resetLink) return false;
-    await emailjs.send(
-      emailJsConfig.serviceId,
-      emailJsConfig.templateId,
-      {
-        to_email: toEmail,
-        to_name: 'Usuario',
-        email: toEmail,
-        user_email: toEmail,
-        from_name: 'SENA FOOD',
-        reply_to: toEmail,
-        reset_link: resetLink,
-        app_name: 'SENA FOOD',
-      },
-      emailJsConfig.publicKey
-    );
+    await emailjs.send(emailJsConfig.serviceId, emailJsConfig.templateId, {
+      to_email: toEmail,
+      to_name: 'Usuario',
+      email: toEmail,
+      user_email: toEmail,
+      from_name: 'SENA FOOD',
+      reply_to: toEmail,
+      reset_link: resetLink,
+      app_name: 'SENA FOOD',
+    });
     return true;
   };
 
@@ -93,7 +94,7 @@ export default function Login() {
       }
       setView('recover-sent');
     } catch (err) {
-      setRecoveryError(err?.message || 'No se pudo enviar el enlace.');
+      setRecoveryError(err?.text || err?.message || 'No se pudo enviar el enlace.');
     } finally {
       setIsRecoverySubmitting(false);
     }
