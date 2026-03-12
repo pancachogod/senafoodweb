@@ -19,7 +19,7 @@ export default function Login() {
   const [recoveryError, setRecoveryError] = useState('');
   const [isRecoverySubmitting, setIsRecoverySubmitting] = useState(false);
   const panelClassName =
-    'w-full rounded-[28px] bg-white/90 px-6 py-6 shadow-card backdrop-blur-sm';
+    'w-full max-w-[440px] rounded-[28px] bg-white/90 px-6 py-6 shadow-card backdrop-blur-sm lg:h-full lg:max-w-none lg:rounded-none lg:px-12 lg:py-12 lg:shadow-none';
 
   const emailJsConfig = {
     serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID,
@@ -146,7 +146,7 @@ export default function Login() {
   return (
     <AuthSplitLayout>
       {view === 'login' ? (
-        <div className={`${panelClassName} flex flex-col items-center gap-4`}>
+        <div className={`${panelClassName} flex flex-col items-center gap-4 lg:justify-center`}>
           <form className="flex w-full flex-col items-center gap-3" onSubmit={handleSubmit}>
             <TextInput
               label="Correo Electronico"
@@ -195,7 +195,7 @@ export default function Login() {
       ) : (
         <div className="flex w-full flex-col items-center gap-4">
           {view === 'recover' ? (
-            <div className={`${panelClassName} flex flex-col items-center gap-4`}>
+            <div className={`${panelClassName} flex flex-col items-center gap-4 lg:justify-center`}>
               <form className="flex w-full flex-col items-center gap-3" onSubmit={handleRecoverySubmit}>
                 <TextInput
                   label="Ingrese su correo electronico"
