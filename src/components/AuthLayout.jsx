@@ -7,9 +7,15 @@ export default function AuthLayout({
   mainClassName = '',
   contentClassName = '',
   showHeader = true,
+  backgroundImage,
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-cream text-text">
+    <div
+      className={`flex min-h-screen flex-col bg-cream text-text ${
+        backgroundImage ? 'bg-cover bg-center' : ''
+      }`}
+      style={backgroundImage ? { backgroundImage: `url(${backgroundImage})` } : undefined}
+    >
       {showHeader ? (
         <header className={`flex justify-center ${headerClassName}`}>
           <img className={logoClassName} src={logo} alt="Sena Food" />

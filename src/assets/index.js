@@ -1,5 +1,6 @@
 import logo from './logo.png';
 import wood from './mesa.png';
+import fondo from './fondo.png';
 import check from './check.png';
 import cart from './carrito.png';
 import cartMenu from './CARRITOPARAMENU.png';
@@ -29,6 +30,7 @@ import stepThree from './PASO 3.png';
 export {
   logo,
   wood,
+  fondo,
   check,
   cart,
   cartMenu,

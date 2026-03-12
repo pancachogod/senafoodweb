@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AuthLayout from '../components/AuthLayout.jsx';
+import AuthSplitLayout from '../components/AuthSplitLayout.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
 import TextInput from '../components/TextInput.jsx';
 import emailjs from '@emailjs/browser';
 import { requestPasswordReset } from '../api/auth.js';
-import { logo } from '../assets/index.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function Login() {
@@ -19,6 +18,8 @@ export default function Login() {
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryError, setRecoveryError] = useState('');
   const [isRecoverySubmitting, setIsRecoverySubmitting] = useState(false);
+  const panelClassName =
+    'w-full rounded-[28px] bg-white/90 px-6 py-6 shadow-card backdrop-blur-sm';
 
   const emailJsConfig = {
     serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID,
@@ -143,10 +144,9 @@ export default function Login() {
   };
 
   return (
-    <AuthLayout showHeader={false}>
-      <img className="mb-4 h-24 w-auto" src={logo} alt="Sena Food" />
+    <AuthSplitLayout>
       {view === 'login' ? (
-        <>
+        <div className={`${panelClassName} flex flex-col items-center gap-4`}>
           <form className="flex w-full flex-col items-center gap-3" onSubmit={handleSubmit}>
             <TextInput
               label="Correo Electronico"
@@ -179,53 +179,55 @@ export default function Login() {
             </PrimaryButton>
           </form>
           <button
-            className="mt-1 text-[11px] text-[#3f6df5]"
+            className="text-[11px] text-[#3f6df5]"
             type="button"
             onClick={handleShowRecovery}
           >
             ¿Olvidaste tu contraseña?
           </button>
-          <div className="mt-2 flex items-center gap-1 text-[11px] text-text">
+          <div className="flex items-center gap-1 text-[11px] text-text">
             <span>¿no tienes cuenta?</span>
             <Link className="text-[11px] text-[#3f6df5]" to="/register">
               registrate
             </Link>
           </div>
-        </>
+        </div>
       ) : (
         <div className="flex w-full flex-col items-center gap-4">
           {view === 'recover' ? (
-            <form className="flex w-full flex-col items-center gap-3" onSubmit={handleRecoverySubmit}>
-              <TextInput
-                label="Ingrese su correo electronico"
-                name="recovery-email"
-                type="text"
-                placeholder="Ingresa tu correo/Documento"
-                value={recoveryEmail}
-                onChange={(value) => {
-                  setRecoveryEmail(value);
-                  if (recoveryError) {
-                    setRecoveryError('');
-                  }
-                }}
-                autoComplete="email"
-                disabled={isRecoverySubmitting}
-              />
-              {recoveryError ? (
-                <div className="flex w-full items-center justify-center gap-2 text-[11px] text-[#e24c3b]">
-                  <span className="flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#e24c3b] text-[10px] text-white">
-                    ×
-                  </span>
-                  <span>{recoveryError}</span>
-                </div>
-              ) : null}
-              <PrimaryButton
-                type="submit"
-                disabled={!recoveryEmail.trim() || isRecoverySubmitting}
-              >
-                {isRecoverySubmitting ? 'ENVIANDO...' : 'ENVIAR ENLACE'}
-              </PrimaryButton>
-            </form>
+            <div className={`${panelClassName} flex flex-col items-center gap-4`}>
+              <form className="flex w-full flex-col items-center gap-3" onSubmit={handleRecoverySubmit}>
+                <TextInput
+                  label="Ingrese su correo electronico"
+                  name="recovery-email"
+                  type="text"
+                  placeholder="Ingresa tu correo/Documento"
+                  value={recoveryEmail}
+                  onChange={(value) => {
+                    setRecoveryEmail(value);
+                    if (recoveryError) {
+                      setRecoveryError('');
+                    }
+                  }}
+                  autoComplete="email"
+                  disabled={isRecoverySubmitting}
+                />
+                {recoveryError ? (
+                  <div className="flex w-full items-center justify-center gap-2 text-[11px] text-[#e24c3b]">
+                    <span className="flex h-[14px] w-[14px] items-center justify-center rounded-full bg-[#e24c3b] text-[10px] text-white">
+                      ×
+                    </span>
+                    <span>{recoveryError}</span>
+                  </div>
+                ) : null}
+                <PrimaryButton
+                  type="submit"
+                  disabled={!recoveryEmail.trim() || isRecoverySubmitting}
+                >
+                  {isRecoverySubmitting ? 'ENVIANDO...' : 'ENVIAR ENLACE'}
+                </PrimaryButton>
+              </form>
+            </div>
           ) : null}
           {view === 'recover-sent' ? (
             <div className="flex w-full max-w-[320px] flex-col items-center gap-3 rounded-[26px] bg-white px-6 py-5 text-center shadow-card">
@@ -285,6 +287,6 @@ export default function Login() {
           </button>
         </div>
       )}
-    </AuthLayout>
+    </AuthSplitLayout>
   );
 }

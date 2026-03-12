@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import AuthLayout from '../components/AuthLayout.jsx';
+import AuthSplitLayout from '../components/AuthSplitLayout.jsx';
 import Checkbox from '../components/Checkbox.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
 import TextInput from '../components/TextInput.jsx';
-import { logo } from '../assets/index.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const nameRegex = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/;
@@ -27,6 +26,10 @@ export default function Register() {
   const [showTerms, setShowTerms] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const passwordHasMinLength = password.length >= 6;
+  const passwordHasUppercase = /[A-Z]/.test(password);
+  const panelClassName =
+    'w-full rounded-[28px] bg-white/90 px-6 py-6 shadow-card backdrop-blur-sm';
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -69,74 +72,101 @@ export default function Register() {
   };
 
   return (
-    <AuthLayout showHeader={false}>
-      <img className="mb-4 h-24 w-auto" src={logo} alt="Sena Food" />
-      <form className="flex w-full flex-col items-center gap-3" onSubmit={handleSubmit}>
-        <TextInput
-          label="Numero de documento"
-          name="document"
-          placeholder="Ingresa tu numero de documento"
-          value={document}
-          onChange={(value) => setDocument(sanitizeDocument(value))}
-          autoComplete="off"
-          inputMode="numeric"
-          maxLength={11}
-        />
-        <TextInput
-          label="Nombre completo"
-          name="name"
-          placeholder="Ingresa tu nombre Completo"
-          value={name}
-          onChange={(value) => setName(sanitizeName(value))}
-          autoComplete="name"
-        />
-        <TextInput
-          label="Numero de telefono"
-          name="phone"
-          placeholder="Ingresa tu numero de telefono"
-          value={phone}
-          onChange={(value) => setPhone(sanitizeDigits(value))}
-          autoComplete="tel"
-          inputMode="numeric"
-          maxLength={10}
-        />
-        <TextInput
-          label="Correo electronico"
-          name="email"
-          type="email"
-          placeholder="Ingresa tu correo electronico"
-          value={email}
-          onChange={setEmail}
-          autoComplete="email"
-        />
-        <TextInput
-          label="Contraseña"
-          name="password"
-          type="password"
-          placeholder="Crea una contraseña"
-          value={password}
-          onChange={setPassword}
-          autoComplete="new-password"
-        />
-        <div className="flex w-full justify-center">
-          <Checkbox
-            label="Aceptar terminos y condiciones"
-            checked={acceptedTerms}
-            onChange={() => setShowTerms(true)}
+    <AuthSplitLayout>
+      <div className={`${panelClassName} flex flex-col items-center gap-4`}>
+        <form className="flex w-full flex-col items-center gap-3" onSubmit={handleSubmit}>
+          <TextInput
+            label="Numero de documento"
+            name="document"
+            placeholder="Ingresa tu numero de documento"
+            value={document}
+            onChange={(value) => setDocument(sanitizeDocument(value))}
+            autoComplete="off"
+            inputMode="numeric"
+            maxLength={11}
           />
-        </div>
-        {error ? (
-          <div className="text-center text-[11px] text-[#e24c3b]">{error}</div>
-        ) : null}
-        <PrimaryButton type="submit" disabled={!acceptedTerms || isSubmitting}>
-          {isSubmitting ? 'REGISTRANDO...' : 'REGISTRARME'}
-        </PrimaryButton>
-      </form>
-      <Link className="mt-2 text-[12px] uppercase tracking-[0.4px] text-[#e75a1a]" to="/login">
-        ¿YA TIENES UNA CUENTA?
-      </Link>
+          <TextInput
+            label="Nombre completo"
+            name="name"
+            placeholder="Ingresa tu nombre Completo"
+            value={name}
+            onChange={(value) => setName(sanitizeName(value))}
+            autoComplete="name"
+          />
+          <TextInput
+            label="Numero de telefono"
+            name="phone"
+            placeholder="Ingresa tu numero de telefono"
+            value={phone}
+            onChange={(value) => setPhone(sanitizeDigits(value))}
+            autoComplete="tel"
+            inputMode="numeric"
+            maxLength={10}
+          />
+          <TextInput
+            label="Correo electronico"
+            name="email"
+            type="email"
+            placeholder="Ingresa tu correo electronico"
+            value={email}
+            onChange={setEmail}
+            autoComplete="email"
+          />
+          <TextInput
+            label="Contraseña"
+            name="password"
+            type="password"
+            placeholder="Crea una contraseña"
+            value={password}
+            onChange={setPassword}
+            autoComplete="new-password"
+          />
+          <div className="w-full space-y-1 text-[11px]">
+            <div
+              className={`flex items-center gap-2 ${
+                passwordHasMinLength ? 'text-[#2f9e44]' : 'text-[#d84b2b]'
+              }`}
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  passwordHasMinLength ? 'bg-[#2f9e44]' : 'bg-[#d84b2b]'
+                }`}
+              />
+              <span>Min. 6 caracteres</span>
+            </div>
+            <div
+              className={`flex items-center gap-2 ${
+                passwordHasUppercase ? 'text-[#2f9e44]' : 'text-[#d84b2b]'
+              }`}
+            >
+              <span
+                className={`h-1.5 w-1.5 rounded-full ${
+                  passwordHasUppercase ? 'bg-[#2f9e44]' : 'bg-[#d84b2b]'
+                }`}
+              />
+              <span>1 mayuscula</span>
+            </div>
+          </div>
+          <div className="flex w-full justify-center">
+            <Checkbox
+              label="Aceptar terminos y condiciones"
+              checked={acceptedTerms}
+              onChange={() => setShowTerms(true)}
+            />
+          </div>
+          {error ? (
+            <div className="text-center text-[11px] text-[#e24c3b]">{error}</div>
+          ) : null}
+          <PrimaryButton type="submit" disabled={!acceptedTerms || isSubmitting}>
+            {isSubmitting ? 'REGISTRANDO...' : 'REGISTRARME'}
+          </PrimaryButton>
+        </form>
+        <Link className="text-[12px] uppercase tracking-[0.4px] text-[#e75a1a]" to="/login">
+          ¿YA TIENES UNA CUENTA?
+        </Link>
+      </div>
       {showTerms ? (
-        <div className="fixed inset-0 z-10 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
+        <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
           <div className="flex w-full max-w-[420px] flex-col rounded-[24px] bg-white pt-4 pb-3 shadow-card max-h-[85vh]">
             <h2 className="mb-3 text-center text-[14px] text-title">Términos y Condiciones</h2>
             <div className="space-y-2 overflow-y-auto px-6 text-[10px] leading-[1.45] text-text">
@@ -246,6 +276,6 @@ export default function Register() {
           </div>
         </div>
       ) : null}
-    </AuthLayout>
+    </AuthSplitLayout>
   );
 }

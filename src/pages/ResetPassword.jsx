@@ -4,7 +4,7 @@ import AuthLayout from '../components/AuthLayout.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
 import TextInput from '../components/TextInput.jsx';
 import { confirmPasswordReset, validatePasswordResetToken } from '../api/auth.js';
-import { logo } from '../assets/index.js';
+import { fondo, logo } from '../assets/index.js';
 
 const isValidPassword = (value) => value.length >= 6 && /[A-Z]/.test(value);
 
@@ -72,7 +72,7 @@ export default function ResetPassword() {
   };
 
   return (
-    <AuthLayout showHeader={false}>
+    <AuthLayout showHeader={false} backgroundImage={fondo}>
       <img className="mb-4 h-24 w-auto" src={logo} alt="Sena Food" />
       {status === 'checking' ? (
         <p className="text-[11px] text-text">Validando enlace...</p>
