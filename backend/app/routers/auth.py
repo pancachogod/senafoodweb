@@ -152,10 +152,15 @@ def request_password_reset(
         db.commit()
 
         reset_link = f"{settings.frontend_url}/reset?token={raw_token}"
+        email_sent = False
         try:
-            send_password_reset_email(user.email, user.name, reset_link)
+            email_sent = send_password_reset_email(user.email, user.name, reset_link)
         except Exception:
-            pass
+            email_sent = False
+        return PasswordResetResponse(
+            email_sent=email_sent,
+            reset_link=None if email_sent else reset_link,
+        )
 
     return PasswordResetResponse()
 

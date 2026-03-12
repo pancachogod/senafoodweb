@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthLayout from '../components/AuthLayout.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
 import TextInput from '../components/TextInput.jsx';
+import emailjs from '@emailjs/browser';
 import { requestPasswordReset } from '../api/auth.js';
 import { logo } from '../assets/index.js';
 import { useAuth } from '../context/AuthContext.jsx';
@@ -18,6 +19,31 @@ export default function Login() {
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryError, setRecoveryError] = useState('');
   const [isRecoverySubmitting, setIsRecoverySubmitting] = useState(false);
+
+  const emailJsConfig = {
+    serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID,
+    templateId: import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+    publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+  };
+  const canSendEmailJs = Boolean(
+    emailJsConfig.serviceId && emailJsConfig.templateId && emailJsConfig.publicKey
+  );
+
+  const sendResetEmail = async (toEmail, resetLink) => {
+    if (!canSendEmailJs || !resetLink) return false;
+    await emailjs.send(
+      emailJsConfig.serviceId,
+      emailJsConfig.templateId,
+      {
+        to_email: toEmail,
+        to_name: 'Usuario',
+        reset_link: resetLink,
+        app_name: 'SENA FOOD',
+      },
+      emailJsConfig.publicKey
+    );
+    return true;
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -53,7 +79,12 @@ export default function Login() {
     setRecoveryError('');
     setIsRecoverySubmitting(true);
     try {
-      await requestPasswordReset(recoveryEmail.trim());
+      const response = await requestPasswordReset(recoveryEmail.trim());
+      if (!response?.email_sent && response?.reset_link) {
+        if (canSendEmailJs) {
+          await sendResetEmail(recoveryEmail.trim(), response.reset_link);
+        }
+      }
       setView('recover-sent');
     } catch (err) {
       setRecoveryError(err?.message || 'No se pudo enviar el enlace.');

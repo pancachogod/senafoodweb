@@ -51,6 +51,8 @@ class PasswordResetRequest(BaseModel):
 
 class PasswordResetResponse(BaseModel):
     status: str = "ok"
+    email_sent: bool = False
+    reset_link: str | None = None
 
 
 class PasswordResetConfirm(BaseModel):
