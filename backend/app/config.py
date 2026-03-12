@@ -55,7 +55,7 @@ class Settings:
             os.getenv("FRONTEND_URL", "http://localhost:5173")
         )
         self.password_reset_expire_minutes = int(
-            os.getenv("PASSWORD_RESET_EXPIRE_MINUTES", "60")
+            os.getenv("PASSWORD_RESET_EXPIRE_MINUTES", "0")
         )
         self.emailjs_public_key = os.getenv("EMAILJS_PUBLIC_KEY", "")
         self.emailjs_private_key = os.getenv("EMAILJS_PRIVATE_KEY", "")

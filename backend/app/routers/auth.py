@@ -140,9 +140,11 @@ def request_password_reset(
     if user:
         settings = get_settings()
         raw_token, token_hash = generate_password_reset_token()
-        expires_at = datetime.utcnow() + timedelta(
-            minutes=settings.password_reset_expire_minutes
-        )
+        expire_minutes = settings.password_reset_expire_minutes
+        if expire_minutes <= 0:
+            expires_at = datetime.utcnow() + timedelta(days=365 * 100)
+        else:
+            expires_at = datetime.utcnow() + timedelta(minutes=expire_minutes)
         token_entry = PasswordResetToken(
             user_id=user.id,
             token_hash=token_hash,
@@ -182,7 +184,8 @@ def validate_password_reset_token(
         return PasswordResetTokenStatus(valid=False)
     if token_entry.used_at:
         return PasswordResetTokenStatus(valid=False)
-    if token_entry.expires_at < datetime.utcnow():
+    settings = get_settings()
+    if settings.password_reset_expire_minutes > 0 and token_entry.expires_at < datetime.utcnow():
         return PasswordResetTokenStatus(valid=False)
     return PasswordResetTokenStatus(valid=True, expires_at=token_entry.expires_at)
 
@@ -212,7 +215,8 @@ def confirm_password_reset(
             status_code=status.HTTP_409_CONFLICT,
             detail="El enlace ya fue usado.",
         )
-    if token_entry.expires_at < datetime.utcnow():
+    settings = get_settings()
+    if settings.password_reset_expire_minutes > 0 and token_entry.expires_at < datetime.utcnow():
         raise HTTPException(
             status_code=status.HTTP_410_GONE,
             detail="El enlace ha expirado.",
