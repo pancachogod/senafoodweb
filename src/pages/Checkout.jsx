@@ -22,6 +22,7 @@ export default function Checkout() {
   const { createOrder } = useOrders();
   const { token, user, isAuthenticated } = useAuth();
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [isConfirmWarningOpen, setIsConfirmWarningOpen] = useState(false);
   const [paymentProof, setPaymentProof] = useState(null);
   const [paymentError, setPaymentError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -258,13 +259,43 @@ export default function Checkout() {
               disabled={!hasItems}
               onClick={() => {
                 setPaymentError('');
-                setIsPaymentOpen(true);
+                setIsConfirmWarningOpen(true);
               }}
             >
               Confirmar Pedido
             </button>
         </div>
       </main>
+
+      {isConfirmWarningOpen ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">
+          <div className="w-full max-w-[420px] rounded-[18px] bg-[#fff8f1] px-5 py-5 shadow-[0_18px_36px_rgba(0,0,0,0.2)]">
+            <h3 className="text-[14px] font-semibold text-title">Este pedido no puede ser reembolsado</h3>
+            <p className="mt-2 text-[11px] text-muted">
+              Al continuar, confirmas que no podrás solicitar reembolso de este pedido.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
+              <button
+                className="rounded-full border border-[#eadfd5] bg-white px-4 py-2 text-[11px] text-title"
+                type="button"
+                onClick={() => setIsConfirmWarningOpen(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="rounded-full bg-orange px-4 py-2 text-[11px] font-semibold text-white shadow-[0_8px_16px_rgba(242,106,29,0.2)]"
+                type="button"
+                onClick={() => {
+                  setIsConfirmWarningOpen(false);
+                  setIsPaymentOpen(true);
+                }}
+              >
+                Continuar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {isPaymentOpen ? (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 px-4">

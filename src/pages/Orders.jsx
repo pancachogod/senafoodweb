@@ -74,14 +74,11 @@ const loadImageData = async (src) => {
 export default function Orders() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { orders, cancelOrder, isLoading, error } = useOrders();
+  const { orders, isLoading, error } = useOrders();
   const { items, itemCount, total, increaseItem, decreaseItem, removeItem } = useCart();
   const { isAuthenticated, user } = useAuth();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [openOrderId, setOpenOrderId] = useState(null);
-  const [isCancelOpen, setIsCancelOpen] = useState(false);
-  const [orderToCancel, setOrderToCancel] = useState(null);
-  const [cancelError, setCancelError] = useState('');
   const [copiedToken, setCopiedToken] = useState(null);
   const copyTimeoutRef = useRef(null);
 
@@ -107,27 +104,6 @@ export default function Orders() {
     setOpenOrderId((prev) => (prev === orderId ? null : orderId));
   };
 
-  const handleOpenCancel = (order) => {
-    setOrderToCancel(order);
-    setIsCancelOpen(true);
-  };
-
-  const handleCloseCancel = () => {
-    setIsCancelOpen(false);
-    setOrderToCancel(null);
-    setCancelError('');
-  };
-
-  const handleConfirmCancel = async () => {
-    if (!orderToCancel?.id) return;
-    setCancelError('');
-    try {
-      await cancelOrder(orderToCancel.id);
-      handleCloseCancel();
-    } catch (error) {
-      setCancelError(error?.message || 'No se pudo cancelar el pedido.');
-    }
-  };
 
   const handleCopy = async (value) => {
     if (!value) return;
@@ -413,7 +389,6 @@ export default function Orders() {
             ) : hasOrders ? (
               sortedOrders.map((order) => {
                 const isOpen = openOrderId === order.id;
-                const isCancelled = order.status === 'Cancelado';
                 return (
                   <div
                     className="rounded-[18px] border border-[#eadfd5] bg-white shadow-soft"
@@ -608,14 +583,6 @@ export default function Orders() {
                               >
                                 Descargar Recibo
                               </button>
-                              <button
-                                className="w-full rounded-full bg-[#ff2f2f] py-2 text-[11px] font-semibold text-white"
-                                type="button"
-                                disabled={isCancelled}
-                                onClick={() => handleOpenCancel(order)}
-                              >
-                                {isCancelled ? 'Pedido cancelado' : 'Cancelar pedido'}
-                              </button>
                             </div>
                           </div>
                         </div>
@@ -642,36 +609,6 @@ export default function Orders() {
           </div>
         </div>
       </main>
-
-      {isCancelOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/35 px-4">
-          <div className="w-full max-w-[420px] rounded-[18px] bg-[#fff8f1] px-5 py-5 shadow-[0_18px_36px_rgba(0,0,0,0.2)]">
-            <h3 className="text-[14px] font-semibold text-title">¿Cancelar este pedido?</h3>
-            <p className="mt-2 text-[11px] text-muted">
-              Esta acción no se puede deshacer. El pedido será cancelado y no podrás recuperarlo.
-            </p>
-            <div className="mt-5 flex flex-wrap items-center justify-end gap-3">
-              <button
-                className="rounded-full border border-[#eadfd5] bg-white px-4 py-2 text-[11px] text-title"
-                type="button"
-                onClick={handleCloseCancel}
-              >
-                No, mantener pedido
-              </button>
-              <button
-                className="rounded-full bg-[#ff2f2f] px-4 py-2 text-[11px] font-semibold text-white"
-                type="button"
-                onClick={handleConfirmCancel}
-              >
-                Si, cancelar pedido
-              </button>
-            </div>
-            {cancelError ? (
-              <p className="mt-3 text-[10px] text-[#e24c3b]">{cancelError}</p>
-            ) : null}
-          </div>
-        </div>
-      ) : null}
 
       <CartDrawer
         open={isCartOpen}
