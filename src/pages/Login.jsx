@@ -40,19 +40,24 @@ export default function Login() {
       return { sent: false, error: 'EmailJS no configurado.' };
     }
     try {
-      await emailjs.send(emailJsConfig.serviceId, emailJsConfig.templateId, {
-        to_email: toEmail,
-        to_name: 'Usuario',
-        email: toEmail,
-        user_email: toEmail,
-        name: 'Usuario',
-        user_name: 'Usuario',
-        from_email: toEmail,
-        from_name: 'SENA FOOD',
-        reply_to: toEmail,
-        reset_link: resetLink,
-        app_name: 'SENA FOOD',
-      });
+      await emailjs.send(
+        emailJsConfig.serviceId,
+        emailJsConfig.templateId,
+        {
+          to_email: toEmail,
+          to_name: 'Usuario',
+          email: toEmail,
+          user_email: toEmail,
+          name: 'Usuario',
+          user_name: 'Usuario',
+          from_email: toEmail,
+          from_name: 'SENA FOOD',
+          reply_to: toEmail,
+          reset_link: resetLink,
+          app_name: 'SENA FOOD',
+        },
+        { publicKey: emailJsConfig.publicKey }
+      );
       return { sent: true };
     } catch (err) {
       return {
