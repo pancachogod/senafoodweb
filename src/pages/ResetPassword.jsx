@@ -10,24 +10,50 @@ const isValidPassword = (value) => value.length >= 6 && /[A-Z]/.test(value);
 
 export default function ResetPassword() {
   const location = useLocation();
-  const token = useMemo(() => new URLSearchParams(location.search).get('token') || '', [location.search]);
+  const token = useMemo(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const fromSearch =
+      searchParams.get('token') ||
+      searchParams.get('reset_token') ||
+      searchParams.get('resetToken') ||
+      '';
+    if (fromSearch) return fromSearch;
+
+    const hash = location.hash.startsWith('#') ? location.hash.slice(1) : location.hash;
+    const hashParams = new URLSearchParams(hash.startsWith('?') ? hash.slice(1) : hash);
+    const fromHash =
+      hashParams.get('token') ||
+      hashParams.get('reset_token') ||
+      hashParams.get('resetToken') ||
+      '';
+    if (fromHash) return fromHash;
+
+    const pathMatch = location.pathname.match(/\/reset\/?(.+)?$/);
+    if (pathMatch?.[1]) {
+      return decodeURIComponent(pathMatch[1]);
+    }
+
+    return '';
+  }, [location.hash, location.pathname, location.search]);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [status, setStatus] = useState('checking');
   const [validationMessage, setValidationMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [manualToken, setManualToken] = useState('');
+  const effectiveToken = token || manualToken.trim();
 
   useEffect(() => {
-    if (!token) {
-      setStatus('invalid');
-      return;
-    }
-
     let isActive = true;
     setStatus('form');
     setValidationMessage('');
-    validatePasswordResetToken(token)
+    if (!effectiveToken) {
+      return () => {
+        isActive = false;
+      };
+    }
+    validatePasswordResetToken(effectiveToken)
       .then((data) => {
         if (!isActive) return;
         if (!data.valid) {
@@ -46,11 +72,15 @@ export default function ResetPassword() {
     return () => {
       isActive = false;
     };
-  }, [token]);
+  }, [effectiveToken]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!token || status === 'invalid') {
+    if (!effectiveToken) {
+      setError('El enlace no trae el token. Pega el token del correo o solicita uno nuevo.');
+      return;
+    }
+    if (status === 'invalid') {
       return;
     }
     if (!password || !confirmPassword) {
@@ -68,7 +98,7 @@ export default function ResetPassword() {
     setError('');
     setIsSubmitting(true);
     try {
-      await confirmPasswordReset(token, password);
+      await confirmPasswordReset(effectiveToken, password);
       setStatus('success');
       setPassword('');
       setConfirmPassword('');
@@ -84,16 +114,6 @@ export default function ResetPassword() {
       <img className="mb-4 h-24 w-auto" src={logo} alt="Sena Food" />
       {status === 'checking' ? (
         <p className="text-[11px] text-text">Validando enlace...</p>
-      ) : null}
-      {status === 'invalid' ? (
-        <div className="flex w-full max-w-[320px] flex-col items-center gap-3 rounded-[22px] bg-white px-6 py-5 text-center shadow-card">
-          <p className="text-[11px] text-text">
-            El enlace no es valido o ya expiro. Solicita uno nuevo desde el inicio de sesion.
-          </p>
-          <Link className="text-[11px] text-[#3f6df5]" to="/login">
-            Volver a iniciar sesion
-          </Link>
-        </div>
       ) : null}
       {status === 'success' ? (
         <div className="flex w-full max-w-[320px] flex-col items-center gap-3 rounded-[22px] bg-white px-6 py-5 text-center shadow-card">
@@ -113,6 +133,22 @@ export default function ResetPassword() {
                 </span>
                 <span>{validationMessage}</span>
               </div>
+            ) : null}
+            {!token ? (
+              <TextInput
+                label="Token del enlace"
+                name="reset-token"
+                placeholder="Pega el token del correo"
+                value={manualToken}
+                onChange={(value) => {
+                  setManualToken(value);
+                  if (error) {
+                    setError('');
+                  }
+                }}
+                autoComplete="off"
+                disabled={isSubmitting}
+              />
             ) : null}
             <TextInput
               label="Nueva contrasena"
