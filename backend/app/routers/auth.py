@@ -12,7 +12,9 @@ from ..email import send_account_verification_email, send_password_reset_email
 from ..models import EmailVerificationToken, PasswordResetToken, User
 from ..schemas import (
     EmailVerificationConfirm,
+    EmailVerificationResendRequest,
     EmailVerificationResponse,
+    EmailVerificationStatus,
     PasswordChangeRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
@@ -35,6 +37,22 @@ from ..security import (
 from ..utils import generate_password_reset_token, hash_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def build_verification_token(settings, user_id: int) -> tuple[str, EmailVerificationToken, str]:
+    raw_token, token_hash = generate_password_reset_token()
+    expire_minutes = settings.account_verification_expire_minutes
+    if expire_minutes <= 0:
+        expires_at = datetime.utcnow() + timedelta(days=365 * 100)
+    else:
+        expires_at = datetime.utcnow() + timedelta(minutes=expire_minutes)
+    token_entry = EmailVerificationToken(
+        user_id=user_id,
+        token_hash=token_hash,
+        expires_at=expires_at,
+    )
+    verify_link = f"{settings.frontend_url}/verify?token={raw_token}"
+    return raw_token, token_entry, verify_link
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
@@ -83,20 +101,8 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> RegisterResp
         ) from None
 
     settings = get_settings()
-    raw_token, token_hash = generate_password_reset_token()
-    expire_minutes = settings.account_verification_expire_minutes
-    if expire_minutes <= 0:
-        expires_at = datetime.utcnow() + timedelta(days=365 * 100)
-    else:
-        expires_at = datetime.utcnow() + timedelta(minutes=expire_minutes)
-    token_entry = EmailVerificationToken(
-        user_id=user.id,
-        token_hash=token_hash,
-        expires_at=expires_at,
-    )
+    raw_token, token_entry, verify_link = build_verification_token(settings, user.id)
     db.add(token_entry)
-
-    verify_link = f"{settings.frontend_url}/verify?token={raw_token}"
     email_sent, error_message = send_account_verification_email(
         user.email,
         user.name,
@@ -108,6 +114,46 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> RegisterResp
     db.refresh(user)
     return RegisterResponse(
         user=user,
+        email_sent=email_sent,
+        verify_link=verify_link,
+        error=error_message,
+    )
+
+
+@router.post("/verify/resend", response_model=EmailVerificationStatus)
+def resend_email_verification(
+    payload: EmailVerificationResendRequest,
+    db: Session = Depends(get_db),
+) -> EmailVerificationStatus:
+    email = payload.email.strip()
+    if not email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El correo es obligatorio.",
+        )
+    user = db.scalar(select(User).where(User.email == email))
+    if not user:
+        return EmailVerificationStatus(
+            email_sent=False,
+            error="No existe una cuenta con ese correo.",
+        )
+    if user.is_verified:
+        return EmailVerificationStatus(
+            email_sent=False,
+            error="La cuenta ya esta verificada.",
+        )
+
+    settings = get_settings()
+    raw_token, token_entry, verify_link = build_verification_token(settings, user.id)
+    db.add(token_entry)
+    email_sent, error_message = send_account_verification_email(
+        user.email,
+        user.name,
+        verify_link,
+        raw_token,
+    )
+    db.commit()
+    return EmailVerificationStatus(
         email_sent=email_sent,
         verify_link=verify_link,
         error=error_message,

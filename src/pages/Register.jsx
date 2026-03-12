@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import emailjs from '@emailjs/browser';
 import AuthSplitLayout from '../components/AuthSplitLayout.jsx';
 import Checkbox from '../components/Checkbox.jsx';
 import PrimaryButton from '../components/PrimaryButton.jsx';
 import TextInput from '../components/TextInput.jsx';
+import { resendAccountVerification } from '../api/auth.js';
 import { useAuth } from '../context/AuthContext.jsx';
 
 const nameRegex = /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ\s]+$/;
@@ -29,6 +31,66 @@ export default function Register() {
   const [view, setView] = useState('form');
   const [verificationLink, setVerificationLink] = useState('');
   const [emailSent, setEmailSent] = useState(true);
+  const [resendStatus, setResendStatus] = useState('');
+  const [isResending, setIsResending] = useState(false);
+  const verifyEmailJsConfig = {
+    serviceId:
+      import.meta.env.VITE_EMAILJS_VERIFY_SERVICE_ID ||
+      import.meta.env.VITE_EMAILJS_SERVICE_ID,
+    templateId:
+      import.meta.env.VITE_EMAILJS_VERIFY_TEMPLATE_ID ||
+      import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+    publicKey: import.meta.env.VITE_EMAILJS_PUBLIC_KEY,
+  };
+  const canSendVerifyEmail = Boolean(
+    verifyEmailJsConfig.serviceId &&
+      verifyEmailJsConfig.templateId &&
+      verifyEmailJsConfig.publicKey
+  );
+
+  useEffect(() => {
+    if (canSendVerifyEmail) {
+      emailjs.init({ publicKey: verifyEmailJsConfig.publicKey });
+    }
+  }, [canSendVerifyEmail, verifyEmailJsConfig.publicKey]);
+
+  const sendVerifyEmail = async (toEmail, verifyLink) => {
+    if (!canSendVerifyEmail || !verifyLink) {
+      return { sent: false, error: 'EmailJS no configurado.' };
+    }
+    const tokenMatch = verifyLink.match(/[?&]token=([^&]+)/);
+    const verifyToken = tokenMatch ? decodeURIComponent(tokenMatch[1]) : '';
+    try {
+      await emailjs.send(
+        verifyEmailJsConfig.serviceId,
+        verifyEmailJsConfig.templateId,
+        {
+          to_email: toEmail,
+          to_name: name,
+          email: toEmail,
+          user_email: toEmail,
+          name: name,
+          user_name: name,
+          from_email: toEmail,
+          from_name: 'SENA FOOD',
+          reply_to: toEmail,
+          verify_link: verifyLink,
+          verification_link: verifyLink,
+          verifyLink: verifyLink,
+          verify_url: verifyLink,
+          verifyUrl: verifyLink,
+          token: verifyToken,
+          verify_token: verifyToken,
+          verifyToken: verifyToken,
+          app_name: 'SENA FOOD',
+        },
+        { publicKey: verifyEmailJsConfig.publicKey }
+      );
+      return { sent: true };
+    } catch (err) {
+      return { sent: false, error: err?.text || err?.message || 'No se pudo enviar el correo.' };
+    }
+  };
   const passwordHasMinLength = password.length >= 6;
   const passwordHasUppercase = /[A-Z]/.test(password);
   const panelClassName =
@@ -66,13 +128,50 @@ export default function Register() {
         document,
         password,
       });
-      setVerificationLink(response?.verify_link || '');
-      setEmailSent(response?.email_sent !== false);
+      const link = response?.verify_link || '';
+      let sent = Boolean(response?.email_sent);
+      let message = response?.error || '';
+      if (!sent && canSendVerifyEmail && link) {
+        const fallback = await sendVerifyEmail(email, link);
+        sent = fallback.sent;
+        if (!sent && fallback.error) {
+          message = fallback.error;
+        }
+      }
+      setVerificationLink(link);
+      setEmailSent(sent);
+      setResendStatus(message || '');
       setView('verify');
     } catch (err) {
       setError(err?.message || 'No se pudo crear la cuenta.');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!email) return;
+    setIsResending(true);
+    setResendStatus('');
+    try {
+      const response = await resendAccountVerification(email);
+      const link = response?.verify_link || verificationLink;
+      let sent = Boolean(response?.email_sent);
+      let message = response?.error || '';
+      if (!sent && canSendVerifyEmail && link) {
+        const fallback = await sendVerifyEmail(email, link);
+        sent = fallback.sent;
+        if (!sent && fallback.error) {
+          message = fallback.error;
+        }
+      }
+      setVerificationLink(link);
+      setEmailSent(sent);
+      setResendStatus(sent ? 'Correo reenviado correctamente.' : message || 'No se pudo reenviar el correo.');
+    } catch (err) {
+      setResendStatus(err?.message || 'No se pudo reenviar el correo.');
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -206,6 +305,19 @@ export default function Register() {
                 </button>
               </div>
             ) : null}
+            <div className="flex w-full flex-col items-center gap-2">
+              <button
+                className="rounded-full border border-[#eadfd5] bg-white px-4 py-2 text-[11px] font-semibold text-title"
+                type="button"
+                onClick={handleResend}
+                disabled={isResending}
+              >
+                {isResending ? 'REENVIANDO...' : 'REENVIAR CORREO'}
+              </button>
+              {resendStatus ? (
+                <p className="text-[10px] text-muted">{resendStatus}</p>
+              ) : null}
+            </div>
             <PrimaryButton type="button" className="max-w-[200px]" onClick={() => navigate('/login')}>
               Ir a iniciar sesion
             </PrimaryButton>

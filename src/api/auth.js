@@ -61,3 +61,10 @@ export function confirmAccountVerification(token) {
     body: { token },
   });
 }
+
+export function resendAccountVerification(email) {
+  return apiRequest('/auth/verify/resend', {
+    method: 'POST',
+    body: { email },
+  });
+}

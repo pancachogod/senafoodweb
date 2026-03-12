@@ -86,6 +86,16 @@ class EmailVerificationResponse(BaseModel):
     status: str = "ok"
 
 
+class EmailVerificationResendRequest(BaseModel):
+    email: EmailStr
+
+
+class EmailVerificationStatus(BaseModel):
+    email_sent: bool = False
+    verify_link: str | None = None
+    error: str | None = None
+
+
 class ProductCreate(BaseModel):
     name: str
     description: str | None = ""
