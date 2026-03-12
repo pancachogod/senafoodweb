@@ -48,7 +48,7 @@ export default function HeaderNavDrawer({ active, onNavigateHome, onNavigateOrde
             />
           </svg>
         </span>
-        Menu
+        Inicio y pedidos
       </button>
       {open ? (
         <div
@@ -75,7 +75,7 @@ export default function HeaderNavDrawer({ active, onNavigateHome, onNavigateOrde
             }}
             role="menuitem"
           >
-            Mis pedidos
+            Pedidos
           </button>
         </div>
       ) : null}
