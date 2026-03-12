@@ -10,7 +10,7 @@ export default function AuthSplitLayout({
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${fondo})` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-br from-cream/95 via-cream/85 to-cream/70" />
+      <div className="absolute inset-0 bg-gradient-to-br from-cream/80 via-cream/55 to-cream/35" />
       <main className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
         <div className="grid w-full max-w-6xl gap-8 lg:grid-cols-2 lg:gap-10">
           <section className="order-1 flex items-center justify-center lg:justify-start">
