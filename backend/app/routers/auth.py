@@ -158,6 +158,7 @@ def request_password_reset(
             user.email,
             user.name,
             reset_link,
+            raw_token,
         )
         return PasswordResetResponse(
             email_sent=email_sent,

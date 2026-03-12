@@ -9,6 +9,7 @@ def send_password_reset_email(
     to_email: str,
     to_name: str,
     reset_link: str,
+    reset_token: str | None = None,
 ) -> tuple[bool, str | None]:
     settings = get_settings()
     if not (
@@ -35,6 +36,12 @@ def send_password_reset_email(
             "from_name": "SENA FOOD",
             "reply_to": to_email,
             "reset_link": reset_link,
+            "resetLink": reset_link,
+            "reset_url": reset_link,
+            "resetUrl": reset_link,
+            "token": reset_token or "",
+            "reset_token": reset_token or "",
+            "resetToken": reset_token or "",
             "app_name": "SENA FOOD",
         },
     }

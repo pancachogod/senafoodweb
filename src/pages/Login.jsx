@@ -70,6 +70,8 @@ export default function Login() {
     if (!canSendEmailJs || !resetLink) {
       return { sent: false, error: 'EmailJS no configurado.' };
     }
+    const tokenMatch = resetLink.match(/[?&]token=([^&]+)/);
+    const resetToken = tokenMatch ? decodeURIComponent(tokenMatch[1]) : '';
     try {
       await emailjs.send(
         emailJsConfig.serviceId,
@@ -85,6 +87,12 @@ export default function Login() {
           from_name: 'SENA FOOD',
           reply_to: toEmail,
           reset_link: resetLink,
+          resetLink: resetLink,
+          reset_url: resetLink,
+          resetUrl: resetLink,
+          token: resetToken,
+          reset_token: resetToken,
+          resetToken: resetToken,
           app_name: 'SENA FOOD',
         },
         { publicKey: emailJsConfig.publicKey }
