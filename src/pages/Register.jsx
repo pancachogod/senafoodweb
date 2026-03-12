@@ -129,12 +129,13 @@ export default function Register() {
         password,
       });
       const link = response?.verify_link || '';
-      let sent = Boolean(response?.email_sent);
+      const backendSent = Boolean(response?.email_sent);
+      let sent = backendSent;
       let message = response?.error || '';
-      if (!sent && canSendVerifyEmail && link) {
+      if (canSendVerifyEmail && link) {
         const fallback = await sendVerifyEmail(email, link);
-        sent = fallback.sent;
-        if (!sent && fallback.error) {
+        sent = fallback.sent || backendSent;
+        if (!fallback.sent && fallback.error) {
           message = fallback.error;
         }
       }
@@ -156,18 +157,21 @@ export default function Register() {
     try {
       const response = await resendAccountVerification(email);
       const link = response?.verify_link || verificationLink;
-      let sent = Boolean(response?.email_sent);
+      const backendSent = Boolean(response?.email_sent);
+      let sent = backendSent;
       let message = response?.error || '';
-      if (!sent && canSendVerifyEmail && link) {
+      if (canSendVerifyEmail && link) {
         const fallback = await sendVerifyEmail(email, link);
-        sent = fallback.sent;
-        if (!sent && fallback.error) {
+        sent = fallback.sent || backendSent;
+        if (!fallback.sent && fallback.error) {
           message = fallback.error;
         }
       }
       setVerificationLink(link);
       setEmailSent(sent);
-      setResendStatus(sent ? 'Correo reenviado correctamente.' : message || 'No se pudo reenviar el correo.');
+      setResendStatus(
+        sent ? 'Correo reenviado correctamente.' : message || 'No se pudo reenviar el correo.'
+      );
     } catch (err) {
       setResendStatus(err?.message || 'No se pudo reenviar el correo.');
     } finally {
@@ -287,6 +291,9 @@ export default function Register() {
                 tu cuenta.
               </p>
             )}
+            <p className="text-[10px] text-muted">
+              Revisa la carpeta de spam o correo no deseado.
+            </p>
             {verificationLink ? (
               <div className="w-full rounded-[12px] border border-[#eadfd5] bg-white px-3 py-2 text-[10px] text-title">
                 <span className="break-all">{verificationLink}</span>
