@@ -27,6 +27,7 @@ export default function HeaderNavDrawer({ active, onNavigateHome, onNavigateOrde
     'w-full rounded-[10px] px-3 py-2 text-left text-[12px] font-semibold transition';
   const activeClass = 'bg-[#ffe7d4] text-orange';
   const idleClass = 'text-title hover:bg-[#fff4eb]';
+  const toggleLabel = active === 'orders' ? 'Pedidos' : 'Inicio';
 
   return (
     <div className="relative" ref={menuRef}>
@@ -48,7 +49,7 @@ export default function HeaderNavDrawer({ active, onNavigateHome, onNavigateOrde
             />
           </svg>
         </span>
-        Inicio y pedidos
+        {toggleLabel}
       </button>
       {open ? (
         <div
