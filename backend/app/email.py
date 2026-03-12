@@ -5,7 +5,11 @@ from .config import get_settings
 EMAILJS_ENDPOINT = "https://api.emailjs.com/api/v1.0/email/send"
 
 
-def send_password_reset_email(to_email: str, to_name: str, reset_link: str) -> bool:
+def send_password_reset_email(
+    to_email: str,
+    to_name: str,
+    reset_link: str,
+) -> tuple[bool, str | None]:
     settings = get_settings()
     if not (
         settings.emailjs_public_key
@@ -13,7 +17,7 @@ def send_password_reset_email(to_email: str, to_name: str, reset_link: str) -> b
         and settings.emailjs_service_id
         and settings.emailjs_template_id
     ):
-        return False
+        return False, "EmailJS no configurado en el backend."
 
     payload = {
         "service_id": settings.emailjs_service_id,
@@ -35,6 +39,12 @@ def send_password_reset_email(to_email: str, to_name: str, reset_link: str) -> b
         },
     }
 
-    response = requests.post(EMAILJS_ENDPOINT, json=payload, timeout=10)
-    response.raise_for_status()
-    return True
+    try:
+        response = requests.post(EMAILJS_ENDPOINT, json=payload, timeout=10)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        message = None
+        if getattr(exc, "response", None) is not None:
+            message = exc.response.text or None
+        return False, message or str(exc)
+    return True, None

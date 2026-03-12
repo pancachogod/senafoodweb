@@ -114,6 +114,12 @@ export default function Login() {
         if (!response?.reset_link) {
           throw new Error('No encontramos ese correo o documento.');
         }
+        if (!canSendEmailJs && recoveryEmail.includes('@')) {
+          throw new Error('Faltan las variables VITE_EMAILJS_* en Vercel o no se redeployo.');
+        }
+        if (response?.error) {
+          throw new Error(response.error);
+        }
         throw new Error('No se pudo enviar el enlace.');
       }
       setView('recover-sent');
