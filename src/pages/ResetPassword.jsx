@@ -15,6 +15,7 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [status, setStatus] = useState('checking');
+  const [validationMessage, setValidationMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -24,15 +25,22 @@ export default function ResetPassword() {
     }
 
     let isActive = true;
-    setStatus('checking');
+    setStatus('form');
+    setValidationMessage('');
     validatePasswordResetToken(token)
       .then((data) => {
         if (!isActive) return;
-        setStatus(data.valid ? 'valid' : 'invalid');
+        if (!data.valid) {
+          setValidationMessage(
+            'No pudimos validar el enlace. Puedes intentar crear tu contraseña de todas formas.'
+          );
+        }
       })
       .catch(() => {
         if (!isActive) return;
-        setStatus('invalid');
+        setValidationMessage(
+          'No pudimos validar el enlace. Puedes intentar crear tu contraseña de todas formas.'
+        );
       });
 
     return () => {
@@ -42,7 +50,7 @@ export default function ResetPassword() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (status !== 'valid') {
+    if (!token || status === 'invalid') {
       return;
     }
     if (!password || !confirmPassword) {
@@ -95,9 +103,17 @@ export default function ResetPassword() {
           </Link>
         </div>
       ) : null}
-      {status === 'valid' ? (
+      {status === 'form' ? (
         <>
           <form className="flex w-full flex-col items-center gap-3" onSubmit={handleSubmit}>
+            {validationMessage ? (
+              <div className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-[#fff4eb] px-3 py-2 text-[11px] text-title">
+                <span className="flex h-[14px] w-[14px] items-center justify-center rounded-full bg-orange text-[10px] text-white">
+                  !
+                </span>
+                <span>{validationMessage}</span>
+              </div>
+            ) : null}
             <TextInput
               label="Nueva contrasena"
               name="reset-password"

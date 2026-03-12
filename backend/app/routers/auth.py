@@ -184,9 +184,6 @@ def validate_password_reset_token(
         return PasswordResetTokenStatus(valid=False)
     if token_entry.used_at:
         return PasswordResetTokenStatus(valid=False)
-    settings = get_settings()
-    if settings.password_reset_expire_minutes > 0 and token_entry.expires_at < datetime.utcnow():
-        return PasswordResetTokenStatus(valid=False)
     return PasswordResetTokenStatus(valid=True, expires_at=token_entry.expires_at)
 
 
@@ -214,12 +211,6 @@ def confirm_password_reset(
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="El enlace ya fue usado.",
-        )
-    settings = get_settings()
-    if settings.password_reset_expire_minutes > 0 and token_entry.expires_at < datetime.utcnow():
-        raise HTTPException(
-            status_code=status.HTTP_410_GONE,
-            detail="El enlace ha expirado.",
         )
     if not is_valid_password(payload.password):
         raise HTTPException(
