@@ -23,6 +23,10 @@ def send_password_reset_email(to_email: str, to_name: str, reset_link: str) -> b
         "template_params": {
             "to_email": to_email,
             "to_name": to_name,
+            "email": to_email,
+            "user_email": to_email,
+            "from_name": "SENA FOOD",
+            "reply_to": to_email,
             "reset_link": reset_link,
             "app_name": "SENA FOOD",
         },

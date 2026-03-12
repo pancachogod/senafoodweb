@@ -37,6 +37,10 @@ export default function Login() {
       {
         to_email: toEmail,
         to_name: 'Usuario',
+        email: toEmail,
+        user_email: toEmail,
+        from_name: 'SENA FOOD',
+        reply_to: toEmail,
         reset_link: resetLink,
         app_name: 'SENA FOOD',
       },
@@ -80,10 +84,12 @@ export default function Login() {
     setIsRecoverySubmitting(true);
     try {
       const response = await requestPasswordReset(recoveryEmail.trim());
-      if (!response?.email_sent && response?.reset_link) {
-        if (canSendEmailJs) {
-          await sendResetEmail(recoveryEmail.trim(), response.reset_link);
-        }
+      let sent = Boolean(response?.email_sent);
+      if (!sent && response?.reset_link && canSendEmailJs && recoveryEmail.includes('@')) {
+        sent = await sendResetEmail(recoveryEmail.trim(), response.reset_link);
+      }
+      if (!sent) {
+        throw new Error('No se pudo enviar el enlace.');
       }
       setView('recover-sent');
     } catch (err) {
