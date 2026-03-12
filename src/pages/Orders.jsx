@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import CartDrawer from '../components/CartDrawer.jsx';
+import HeaderNavDrawer from '../components/HeaderNavDrawer.jsx';
 import { cart, logo, profile, qr } from '../assets/index.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useOrders } from '../context/OrdersContext.jsx';
@@ -318,21 +319,18 @@ export default function Orders() {
   return (
     <div className="min-h-screen bg-cream">
       <header className="border-b border-[#eadfd5] bg-white shadow-[0_6px_16px_rgba(0,0,0,0.06)]">
-        <div className="mx-auto flex w-[min(1200px,92vw)] flex-wrap items-center justify-center gap-6 py-4 md:justify-between md:py-5">
-          <img className="h-10 w-auto" src={logo} alt="Sena Food" />
-          <nav className="flex items-center gap-7">
-            <button
-              className="text-[13px] font-medium text-[#5b667a]"
-              type="button"
-              onClick={() => navigate('/home')}
-            >
-              Inicio
-            </button>
-            <span className="rounded-full bg-[#ffe7d4] px-4 py-2 text-[12px] font-semibold text-orange shadow-[0_4px_10px_rgba(242,106,29,0.15)]">
-              Mis pedidos
-            </span>
-          </nav>
-          <div className="flex items-center gap-4">
+        <div className="mx-auto grid w-[min(1200px,92vw)] grid-cols-[1fr_auto_1fr] items-center gap-4 py-4 md:py-5">
+          <div className="flex items-center justify-start">
+            <HeaderNavDrawer
+              active="orders"
+              onNavigateHome={() => navigate('/home')}
+              onNavigateOrders={() => navigate('/mis-pedidos')}
+            />
+          </div>
+          <div className="flex justify-center">
+            <img className="h-14 w-auto sm:h-16 lg:h-20" src={logo} alt="Sena Food" />
+          </div>
+          <div className="flex items-center justify-end gap-4">
             <button
               className="flex h-9 w-9 items-center justify-center rounded-full border border-[#eadfd5] bg-white shadow-[0_4px_10px_rgba(0,0,0,0.08)]"
               type="button"
