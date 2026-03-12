@@ -67,6 +67,8 @@ export default function MenuItem() {
   };
 
   const subtitle = product?.detail?.subtitle ?? product.description;
+  const unitPrice = product?.price ?? 0;
+  const totalPrice = unitPrice * quantity;
 
   return (
     <div className="min-h-screen bg-cream">
@@ -168,14 +170,19 @@ export default function MenuItem() {
                 </div>
               </div>
 
-              <div className="lg:pt-6">
+              <div className="flex flex-col items-stretch lg:pt-6">
                 <h1 className="text-[22px] font-semibold text-title sm:text-[26px]">
                   {product?.name}
                 </h1>
                 <p className="mt-1 text-[12px] text-muted">{subtitle}</p>
                 <p className="mt-3 text-[16px] font-semibold text-orange">
-                  {formatCop(product?.price ?? 0)} COP
+                  {formatCop(totalPrice)} COP
                 </p>
+                {quantity > 1 ? (
+                  <p className="mt-1 text-[11px] text-muted">
+                    Precio unitario: {formatCop(unitPrice)} COP
+                  </p>
+                ) : null}
 
                 <div className="mt-4">
                   <span className="text-[11px] text-muted">Cantidad</span>
@@ -201,7 +208,7 @@ export default function MenuItem() {
                 </div>
 
                 <button
-                  className="mt-5 w-full rounded-full bg-orange py-2.5 text-[12px] font-semibold text-white shadow-[0_8px_16px_rgba(242,106,29,0.24)]"
+                  className="mt-5 w-full max-w-none rounded-full bg-orange py-2.5 text-[12px] font-semibold text-white shadow-[0_8px_16px_rgba(242,106,29,0.24)]"
                   type="button"
                   onClick={handleBuy}
                 >

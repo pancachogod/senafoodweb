@@ -32,11 +32,22 @@ const formatCop = (value) => {
   }).format(value);
 };
 
+const getProductKey = (product) => product?.id ?? product?.code ?? product?.name ?? '';
+
+const getProductImages = (product) => {
+  const gallery = product?.detail?.gallery;
+  if (Array.isArray(gallery) && gallery.length) {
+    return gallery;
+  }
+  return product?.image ? [product.image] : [];
+};
+
 export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
   const [products, setProducts] = useState(menuItems);
   const [productsError, setProductsError] = useState('');
+  const [carouselIndexMap, setCarouselIndexMap] = useState({});
   const { items, addItem, increaseItem, decreaseItem, removeItem, itemCount, total } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
@@ -107,6 +118,7 @@ export default function Home() {
 
   const handleAddToCart = (product) => {
     addItem(product, 1);
+    setIsCartOpen(true);
   };
 
   const handleOpenCart = () => setIsCartOpen(true);
@@ -149,6 +161,41 @@ export default function Home() {
       isActive = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!products.length) return;
+    setCarouselIndexMap((prev) => {
+      const next = {};
+      products.forEach((product) => {
+        const key = getProductKey(product);
+        if (!key) return;
+        const images = getProductImages(product);
+        if (!images.length) return;
+        const current = Number.isFinite(prev[key]) ? prev[key] : 0;
+        next[key] = current >= images.length ? 0 : current;
+      });
+      return next;
+    });
+  }, [products]);
+
+  useEffect(() => {
+    if (!products.length) return;
+    const timer = window.setInterval(() => {
+      setCarouselIndexMap((prev) => {
+        const next = { ...prev };
+        products.forEach((product) => {
+          const key = getProductKey(product);
+          if (!key) return;
+          const images = getProductImages(product);
+          if (images.length <= 1) return;
+          const current = Number.isFinite(next[key]) ? next[key] : 0;
+          next[key] = (current + 1) % images.length;
+        });
+        return next;
+      });
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [products]);
 
   return (
     <div className="min-h-screen bg-cream">
@@ -331,7 +378,21 @@ export default function Home() {
                   key={product.id}
                 >
                   <Link to={`/menu/${product.id}`} aria-label={`Ver ${product.name}`}>
-                    <img className="h-[150px] w-full object-cover" src={product.image} alt={product.name} />
+                    {(() => {
+                      const images = getProductImages(product);
+                      const key = getProductKey(product);
+                      const activeIndex = Number.isFinite(carouselIndexMap[key])
+                        ? carouselIndexMap[key]
+                        : 0;
+                      const activeImage = images[activeIndex] ?? product.image;
+                      return (
+                        <img
+                          className="h-[150px] w-full object-cover"
+                          src={activeImage}
+                          alt={product.name}
+                        />
+                      );
+                    })()}
                   </Link>
                   <div className="px-4 py-4">
                     <h3 className="text-[14px] text-title">
