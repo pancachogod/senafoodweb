@@ -35,6 +35,13 @@ class UserPublic(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class RegisterResponse(BaseModel):
+    user: UserPublic
+    email_sent: bool = False
+    verify_link: str | None = None
+    error: str | None = None
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

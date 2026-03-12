@@ -19,6 +19,7 @@ from ..schemas import (
     PasswordResetResponse,
     PasswordResetTokenStatus,
     PasswordResetTokenValidation,
+    RegisterResponse,
     TokenResponse,
     UserCreate,
     UserLogin,
@@ -36,8 +37,8 @@ from ..utils import generate_password_reset_token, hash_token
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
-def register(payload: UserCreate, db: Session = Depends(get_db)) -> UserPublic:
+@router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)
+def register(payload: UserCreate, db: Session = Depends(get_db)) -> RegisterResponse:
     existing = db.scalar(select(User).where(User.email == payload.email))
     if existing:
         raise HTTPException(
@@ -102,16 +103,15 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> UserPublic:
         verify_link,
         raw_token,
     )
-    if not email_sent:
-        db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=error_message or "No se pudo enviar el correo de verificacion.",
-        )
 
     db.commit()
     db.refresh(user)
-    return user
+    return RegisterResponse(
+        user=user,
+        email_sent=email_sent,
+        verify_link=verify_link,
+        error=error_message,
+    )
 
 
 @router.post("/login", response_model=TokenResponse)

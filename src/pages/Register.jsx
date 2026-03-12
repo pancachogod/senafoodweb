@@ -27,6 +27,8 @@ export default function Register() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [view, setView] = useState('form');
+  const [verificationLink, setVerificationLink] = useState('');
+  const [emailSent, setEmailSent] = useState(true);
   const passwordHasMinLength = password.length >= 6;
   const passwordHasUppercase = /[A-Z]/.test(password);
   const panelClassName =
@@ -57,13 +59,15 @@ export default function Register() {
     setError('');
     setIsSubmitting(true);
     try {
-      await register({
+      const response = await register({
         name: name.trim(),
         email,
         phone,
         document,
         password,
       });
+      setVerificationLink(response?.verify_link || '');
+      setEmailSent(response?.email_sent !== false);
       setView('verify');
     } catch (err) {
       setError(err?.message || 'No se pudo crear la cuenta.');
@@ -173,10 +177,35 @@ export default function Register() {
         ) : (
           <div className="flex w-full flex-col items-center gap-3 text-center">
             <h2 className="text-[14px] font-semibold text-title">Verifica tu cuenta</h2>
-            <p className="text-[11px] text-text">
-              Te enviamos un enlace de activacion a <strong>{email}</strong>. Debes
-              verificar tu cuenta para poder iniciar sesion.
-            </p>
+            {emailSent ? (
+              <p className="text-[11px] text-text">
+                Te enviamos un enlace de activacion a <strong>{email}</strong>. Debes
+                verificar tu cuenta para poder iniciar sesion.
+              </p>
+            ) : (
+              <p className="text-[11px] text-text">
+                No pudimos enviar el correo. Copia el enlace de verificacion para activar
+                tu cuenta.
+              </p>
+            )}
+            {verificationLink ? (
+              <div className="w-full rounded-[12px] border border-[#eadfd5] bg-white px-3 py-2 text-[10px] text-title">
+                <span className="break-all">{verificationLink}</span>
+                <button
+                  className="mt-2 text-[10px] font-semibold text-orange"
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(verificationLink);
+                    } catch (copyError) {
+                      return;
+                    }
+                  }}
+                >
+                  Copiar enlace
+                </button>
+              </div>
+            ) : null}
             <PrimaryButton type="button" className="max-w-[200px]" onClick={() => navigate('/login')}>
               Ir a iniciar sesion
             </PrimaryButton>
