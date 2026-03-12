@@ -11,13 +11,13 @@ export default function AuthSplitLayout({
         style={{ backgroundImage: `url(${fondo})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-br from-cream/95 via-cream/85 to-cream/70" />
-      <main className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10 lg:h-screen lg:items-stretch lg:px-0 lg:py-0">
-        <div className="grid w-full gap-6 lg:h-full lg:grid-cols-2 lg:gap-0">
-          <section className="flex items-center justify-center">
-            <img className={logoClassName} src={logo} alt="Sena Food" />
+      <main className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10">
+        <div className="grid w-full max-w-6xl gap-8 lg:grid-cols-2 lg:gap-10">
+          <section className="order-2 flex items-center justify-center lg:order-1 lg:justify-start">
+            <div className="flex w-full flex-col items-center">{children}</div>
           </section>
-          <section className="flex items-center justify-center lg:items-stretch">
-            <div className="flex w-full flex-col items-center lg:h-full">{children}</div>
+          <section className="order-1 flex items-center justify-center lg:order-2 lg:justify-end">
+            <img className={logoClassName} src={logo} alt="Sena Food" />
           </section>
         </div>
       </main>

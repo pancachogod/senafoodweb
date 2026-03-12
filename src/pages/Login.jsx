@@ -19,7 +19,37 @@ export default function Login() {
   const [recoveryError, setRecoveryError] = useState('');
   const [isRecoverySubmitting, setIsRecoverySubmitting] = useState(false);
   const panelClassName =
-    'w-full max-w-[440px] rounded-[28px] bg-white/90 px-6 py-6 shadow-card backdrop-blur-sm lg:h-full lg:max-w-none lg:rounded-none lg:px-12 lg:py-12 lg:shadow-none';
+    'w-full max-w-[420px] rounded-[26px] border border-[#d1b09a] bg-white/70 px-6 py-6 shadow-[0_10px_26px_rgba(0,0,0,0.12)] backdrop-blur-md sm:px-7 sm:py-7';
+  const mailIcon = (
+    <svg
+      aria-hidden="true"
+      className="h-4 w-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4 6h16v12H4z" />
+      <path d="M22 6l-10 7L2 6" />
+    </svg>
+  );
+  const lockIcon = (
+    <svg
+      aria-hidden="true"
+      className="h-4 w-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect x="4" y="11" width="16" height="9" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
+  );
 
   const emailJsConfig = {
     serviceId: import.meta.env.VITE_EMAILJS_SERVICE_ID,
@@ -146,8 +176,11 @@ export default function Login() {
   return (
     <AuthSplitLayout>
       {view === 'login' ? (
-        <div className={`${panelClassName} flex flex-col items-center gap-4 lg:justify-center`}>
-          <form className="flex w-full flex-col items-center gap-3" onSubmit={handleSubmit}>
+        <div className={`${panelClassName} flex flex-col items-center gap-5 text-center`}>
+          <h1 className="text-[15px] font-semibold tracking-[0.6px] text-title">
+            BIENVENIDO A SENA FOOD
+          </h1>
+          <form className="flex w-full flex-col items-stretch gap-4 text-left" onSubmit={handleSubmit}>
             <TextInput
               label="Correo Electronico"
               name="email"
@@ -156,6 +189,8 @@ export default function Login() {
               value={email}
               onChange={setEmail}
               autoComplete="email"
+              icon={mailIcon}
+              variant="underline"
             />
             <TextInput
               label="Contraseña"
@@ -165,6 +200,8 @@ export default function Login() {
               value={password}
               onChange={setPassword}
               autoComplete="current-password"
+              icon={lockIcon}
+              variant="underline"
             />
             {error ? (
               <div className="flex w-full items-center justify-center gap-2 text-[11px] text-[#e24c3b]">
@@ -174,7 +211,11 @@ export default function Login() {
                 <span>{error}</span>
               </div>
             ) : null}
-            <PrimaryButton type="submit" disabled={isSubmitting}>
+            <PrimaryButton
+              type="submit"
+              className="max-w-none rounded-full"
+              disabled={isSubmitting}
+            >
               {isSubmitting ? 'INGRESANDO...' : 'INICIAR SESIÓN'}
             </PrimaryButton>
           </form>

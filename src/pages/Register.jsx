@@ -29,7 +29,7 @@ export default function Register() {
   const passwordHasMinLength = password.length >= 6;
   const passwordHasUppercase = /[A-Z]/.test(password);
   const panelClassName =
-    'w-full max-w-[440px] rounded-[28px] bg-white/90 px-6 py-6 shadow-card backdrop-blur-sm lg:h-full lg:max-w-none lg:rounded-none lg:px-12 lg:py-12 lg:shadow-none';
+    'w-full max-w-[460px] rounded-[26px] border border-[#d1b09a] bg-white/70 px-6 py-6 shadow-[0_10px_26px_rgba(0,0,0,0.12)] backdrop-blur-md sm:px-7 sm:py-7';
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -73,8 +73,8 @@ export default function Register() {
 
   return (
     <AuthSplitLayout>
-      <div className={`${panelClassName} flex flex-col items-center gap-4 lg:justify-center`}>
-        <form className="flex w-full flex-col items-center gap-3" onSubmit={handleSubmit}>
+      <div className={`${panelClassName} flex flex-col items-center gap-4`}>
+        <form className="flex w-full flex-col items-stretch gap-3" onSubmit={handleSubmit}>
           <TextInput
             label="Numero de documento"
             name="document"
