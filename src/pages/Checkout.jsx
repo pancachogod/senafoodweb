@@ -346,9 +346,7 @@ export default function Checkout() {
                 >
                   <span className="text-[18px] text-muted">{paymentProof ? '✓' : '⬆'}</span>
                   <span className="text-[11px] text-muted">
-                    {paymentProof
-                      ? 'Comprobante cargado'
-                      : 'Haz clic para subir el comprobante'}
+                    {paymentProof ? 'Comprobante cargado' : 'Subir foto de comprobante'}
                   </span>
                   <span className="text-[10px] text-muted">
                     {paymentProof ? paymentProof.name : 'PNG, JPG o JPEG (max. 5MB)'}
