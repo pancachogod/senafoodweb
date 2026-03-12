@@ -17,10 +17,10 @@ export default function TextInput({
 }) {
   const isUnderline = variant === 'underline';
   const labelStyles = `mb-1.5 block text-[12px] ${
-    isUnderline ? 'text-title' : 'text-text'
+    isUnderline ? 'text-title font-semibold' : 'text-text'
   } ${labelClassName}`;
   const inputStyles = isUnderline
-    ? `w-full bg-transparent py-2 text-[12px] text-text outline-none transition placeholder:text-[#8b7a6e] disabled:cursor-not-allowed ${inputClassName}`
+    ? `w-full bg-transparent py-2 text-[12px] text-text outline-none transition placeholder:text-[#8d7b70] disabled:cursor-not-allowed ${inputClassName}`
     : `w-full rounded-[6px] border border-[#f3b28f] bg-white px-3 py-2 text-[12px] text-text outline-none transition focus:border-orange focus:ring-2 focus:ring-orange/20 disabled:cursor-not-allowed disabled:bg-[#f7efe7] ${
         icon ? 'pl-9' : ''
       } ${inputClassName}`;
@@ -47,7 +47,7 @@ export default function TextInput({
       </label>
       {isUnderline ? (
         <div
-          className={`flex items-center gap-2 border-b border-[#d1b09a] pb-1 transition focus-within:border-orange ${
+          className={`flex items-center gap-2 border-b border-[#e3b99a] pb-1 transition focus-within:border-orange ${
             disabled ? 'opacity-60' : ''
           }`}
         >

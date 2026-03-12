@@ -19,7 +19,7 @@ export default function Login() {
   const [recoveryError, setRecoveryError] = useState('');
   const [isRecoverySubmitting, setIsRecoverySubmitting] = useState(false);
   const panelClassName =
-    'w-full max-w-[420px] rounded-[26px] border border-white/55 bg-white/55 px-6 py-6 shadow-[0_18px_50px_rgba(0,0,0,0.2)] backdrop-blur-xl sm:px-7 sm:py-7';
+    'w-full max-w-[430px] rounded-[26px] border border-white/80 bg-[#f7f1eb]/80 px-6 py-7 shadow-[0_18px_50px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:px-7 sm:py-8';
   const mailIcon = (
     <svg
       aria-hidden="true"
