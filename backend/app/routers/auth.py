@@ -70,16 +70,17 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> UserPublic:
         password_hash=get_password_hash(payload.password),
         is_verified=False,
     )
+    db.add(user)
+
     try:
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        db.flush()
     except IntegrityError:
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="El correo, telefono o documento ya esta registrado.",
         ) from None
+
     settings = get_settings()
     raw_token, token_hash = generate_password_reset_token()
     expire_minutes = settings.account_verification_expire_minutes
@@ -93,10 +94,23 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> UserPublic:
         expires_at=expires_at,
     )
     db.add(token_entry)
-    db.commit()
 
     verify_link = f"{settings.frontend_url}/verify?token={raw_token}"
-    send_account_verification_email(user.email, user.name, verify_link, raw_token)
+    email_sent, error_message = send_account_verification_email(
+        user.email,
+        user.name,
+        verify_link,
+        raw_token,
+    )
+    if not email_sent:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=error_message or "No se pudo enviar el correo de verificacion.",
+        )
+
+    db.commit()
+    db.refresh(user)
     return user
 
 
