@@ -64,6 +64,7 @@ class Settings:
         self.emailjs_private_key = os.getenv("EMAILJS_PRIVATE_KEY", "")
         self.emailjs_service_id = os.getenv("EMAILJS_SERVICE_ID", "")
         self.emailjs_template_id = os.getenv("EMAILJS_TEMPLATE_ID", "")
+        self.emailjs_verify_service_id = os.getenv("EMAILJS_VERIFY_SERVICE_ID", "")
         self.emailjs_verify_template_id = os.getenv("EMAILJS_VERIFY_TEMPLATE_ID", "")
         cors_env = os.getenv("CORS_ORIGINS", "")
         self.cors_origins = parse_cors_origins(cors_env)

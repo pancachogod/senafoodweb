@@ -65,16 +65,17 @@ def send_account_verification_email(
 ) -> tuple[bool, str | None]:
     settings = get_settings()
     template_id = settings.emailjs_verify_template_id or settings.emailjs_template_id
+    service_id = settings.emailjs_verify_service_id or settings.emailjs_service_id
     if not (
         settings.emailjs_public_key
         and settings.emailjs_private_key
-        and settings.emailjs_service_id
+        and service_id
         and template_id
     ):
         return False, "EmailJS no configurado en el backend."
 
     payload = {
-        "service_id": settings.emailjs_service_id,
+        "service_id": service_id,
         "template_id": template_id,
         "user_id": settings.emailjs_public_key,
         "accessToken": settings.emailjs_private_key,

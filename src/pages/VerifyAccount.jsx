@@ -37,6 +37,7 @@ export default function VerifyAccount() {
   const effectiveToken = token || manualToken.trim();
   const [status, setStatus] = useState(token ? 'checking' : 'form');
   const [error, setError] = useState('');
+  const [alreadyActive, setAlreadyActive] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -49,8 +50,14 @@ export default function VerifyAccount() {
       })
       .catch((err) => {
         if (!isActive) return;
+        const message = err?.message || 'No se pudo verificar la cuenta.';
+        if (message.toLowerCase().includes('ya fue usado')) {
+          setAlreadyActive(true);
+          setStatus('success');
+          return;
+        }
         setStatus('error');
-        setError(err?.message || 'No se pudo verificar la cuenta.');
+        setError(message);
       });
 
     return () => {
@@ -68,10 +75,17 @@ export default function VerifyAccount() {
     setStatus('checking');
     try {
       await confirmAccountVerification(effectiveToken);
+      setAlreadyActive(false);
       setStatus('success');
     } catch (err) {
+      const message = err?.message || 'No se pudo verificar la cuenta.';
+      if (message.toLowerCase().includes('ya fue usado')) {
+        setAlreadyActive(true);
+        setStatus('success');
+        return;
+      }
       setStatus('form');
-      setError(err?.message || 'No se pudo verificar la cuenta.');
+      setError(message);
     }
   };
 
@@ -83,7 +97,11 @@ export default function VerifyAccount() {
       ) : null}
       {status === 'success' ? (
         <div className="flex w-full max-w-[320px] flex-col items-center gap-3 rounded-[22px] bg-white px-6 py-5 text-center shadow-card">
-          <p className="text-[11px] text-text">Cuenta verificada exitosamente.</p>
+          <p className="text-[11px] text-text">
+            {alreadyActive
+              ? 'Tu cuenta ya esta activa.'
+              : 'Cuenta verificada exitosamente.'}
+          </p>
           <Link className="text-[11px] text-[#3f6df5]" to="/login">
             Ir a iniciar sesion
           </Link>
