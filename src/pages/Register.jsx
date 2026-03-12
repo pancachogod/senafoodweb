@@ -157,9 +157,11 @@ export default function Register() {
           {error ? (
             <div className="text-center text-[11px] text-[#e24c3b]">{error}</div>
           ) : null}
-          <PrimaryButton type="submit" disabled={!acceptedTerms || isSubmitting}>
-            {isSubmitting ? 'REGISTRANDO...' : 'REGISTRARME'}
-          </PrimaryButton>
+          <div className="flex w-full justify-center">
+            <PrimaryButton type="submit" disabled={!acceptedTerms || isSubmitting}>
+              {isSubmitting ? 'REGISTRANDO...' : 'REGISTRARME'}
+            </PrimaryButton>
+          </div>
         </form>
         <Link className="text-[12px] uppercase tracking-[0.4px] text-[#e75a1a]" to="/login">
           ¿YA TIENES UNA CUENTA?
