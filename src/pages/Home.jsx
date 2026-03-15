@@ -216,8 +216,8 @@ export default function Home() {
               onNavigateOrders={() => navigate('/mis-pedidos')}
               trigger={
                 <div className="flex items-center gap-3">
-                  <span className="flex h-12 w-12 items-center justify-center rounded-[12px] bg-[#f2f5fb] shadow-[0_4px_10px_rgba(0,0,0,0.08)]">
-                    <img className="h-10 w-auto" src={logo} alt="Sena Food" />
+                  <span className="flex h-12 w-12 items-center justify-center">
+                    <img className="h-12 w-12 object-contain" src={logo} alt="Sena Food" />
                   </span>
                   <div>
                     <span className="block text-[15px] font-semibold tracking-[0.08em] text-title">
