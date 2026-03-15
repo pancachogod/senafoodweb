@@ -390,57 +390,117 @@ export default function Checkout() {
                 <p className="text-[18px] font-semibold text-orange">{formatCop(total)} COP</p>
               </div>
 
-              <div className="mt-6 border-t border-[#f0e1d6] pt-4">
-                <div className="flex items-center gap-2 text-[11px] font-semibold text-title">
-                  <span className="text-orange">⬆</span>
-                  Comprobante de Pago <span className="text-orange">*</span>
-                </div>
-                <label
-                  className="mt-3 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[14px] border border-[#eadfd5] bg-white px-4 py-5 text-center"
-                  htmlFor="payment-proof"
-                >
-                  <span className="text-[18px] text-muted">{paymentProof ? '✓' : '⬆'}</span>
-                  <span className="text-[11px] text-muted">
-                    {paymentProof ? 'Comprobante cargado' : 'Subir foto de comprobante'}
-                  </span>
-                  <span className="text-[10px] text-muted">
-                    {paymentProof ? paymentProof.name : 'PNG, JPG o JPEG (max. 5MB)'}
-                  </span>
-                </label>
-                <input
-                  id="payment-proof"
-                  type="file"
-                  accept="image/png,image/jpeg"
-                  className="hidden"
-                  onChange={handleProofChange}
-                />
-                {paymentProof ? (
-                  <div className="mt-3 flex items-center gap-3 rounded-[12px] border border-[#eadfd5] bg-white px-3 py-2">
-                    <img
-                      className="h-12 w-12 rounded-[10px] object-cover"
-                      src={paymentProof.dataUrl}
-                      alt="Comprobante"
+            <div className="mt-6 border-t border-[#f0e1d6] pt-4">
+              <div className="flex items-center gap-2 text-[12px] font-semibold text-title">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#fff1e8] text-orange">
+                  <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <path
+                      d="M10 3v9"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
                     />
-                    <div className="flex-1 text-[10px] text-muted">
-                      Archivo seleccionado:{' '}
-                      <span className="font-semibold text-title">{paymentProof.name}</span>
-                    </div>
-                    <button
-                      className="text-[10px] font-semibold text-orange"
-                      type="button"
-                      onClick={() => setPaymentProof(null)}
-                    >
-                      Cambiar
-                    </button>
-                  </div>
-                ) : null}
-                {paymentError ? (
-                  <p className="mt-2 text-[10px] text-[#e24c3b]">{paymentError}</p>
-                ) : null}
-                <p className="mt-2 text-[10px] text-muted">
-                  * El comprobante es obligatorio para confirmar tu pedido
-                </p>
+                    <path
+                      d="M6.5 7.5L10 4l3.5 3.5"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M4 12.5v2a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 16 14.5v-2"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </span>
+                <span>
+                  Comprobante de Pago Nequi <span className="text-orange">*</span>
+                </span>
               </div>
+              <label
+                className={`mt-3 flex cursor-pointer flex-col items-center justify-center gap-2 rounded-[16px] border border-dashed px-5 py-6 text-center transition ${
+                  paymentProof
+                    ? 'border-[#9dd9b0] bg-[#f3fbf6]'
+                    : 'border-[#e2d7ce] bg-[#fffaf5]'
+                }`}
+                htmlFor="payment-proof"
+              >
+                <span className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-white text-muted shadow-[0_6px_12px_rgba(0,0,0,0.08)]">
+                  <svg className="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <path
+                      d="M10 4v8"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M6.5 7.5L10 4l3.5 3.5"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M4 12.5v2a1.5 1.5 0 0 0 1.5 1.5h9A1.5 1.5 0 0 0 16 14.5v-2"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </span>
+                <span className="text-[12px] font-semibold text-title">
+                  {paymentProof ? 'Comprobante cargado' : 'Sube tu comprobante de pago de Nequi'}
+                </span>
+                <span className="text-[10px] text-muted">
+                  {paymentProof
+                    ? paymentProof.name
+                    : 'Toma una captura de pantalla del pago y subela aqui'}
+                </span>
+                <span className="text-[10px] text-muted">
+                  {paymentProof ? 'Haz clic para cambiar el archivo' : 'PNG, JPG o JPEG (max. 5MB)'}
+                </span>
+              </label>
+              <input
+                id="payment-proof"
+                type="file"
+                accept="image/png,image/jpeg"
+                className="hidden"
+                onChange={handleProofChange}
+              />
+              {paymentProof ? (
+                <div className="mt-3 flex items-center gap-3 rounded-[12px] border border-[#eadfd5] bg-white px-3 py-2">
+                  <img
+                    className="h-12 w-12 rounded-[10px] object-cover"
+                    src={paymentProof.dataUrl}
+                    alt="Comprobante"
+                  />
+                  <div className="flex-1 text-[10px] text-muted">
+                    Archivo seleccionado:{' '}
+                    <span className="font-semibold text-title">{paymentProof.name}</span>
+                  </div>
+                  <button
+                    className="text-[10px] font-semibold text-orange"
+                    type="button"
+                    onClick={() => setPaymentProof(null)}
+                  >
+                    Cambiar
+                  </button>
+                </div>
+              ) : null}
+              {paymentError ? (
+                <p className="mt-2 text-[10px] text-[#e24c3b]">{paymentError}</p>
+              ) : null}
+              <div className="mt-3 flex items-start gap-2 rounded-[12px] border border-[#f4d7a4] bg-[#fff6e5] px-3 py-2 text-[10px] text-[#7a4b1c]">
+                <span className="mt-0.5">!</span>
+                <span>
+                  <span className="font-semibold">Importante:</span> El comprobante de pago de Nequi
+                  es obligatorio para confirmar tu pedido. Asegurate de que la imagen sea clara y
+                  legible.
+                </span>
+              </div>
+            </div>
             </div>
 
             <div className="flex items-center gap-3 border-t border-[#f0e1d6] px-6 py-4">
