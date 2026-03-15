@@ -4,6 +4,7 @@ import { cart, logo, profile } from '../assets/index.js';
 import CartDrawer from '../components/CartDrawer.jsx';
 import HeaderNavDrawer from '../components/HeaderNavDrawer.jsx';
 import { useCart } from '../context/CartContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { fetchProducts, fallbackProducts } from '../api/products.js';
 import { menuBenefits, menuItems } from '../data/menu.js';
 
@@ -34,6 +35,7 @@ export default function MenuItem() {
   const [buyButtonWidth, setBuyButtonWidth] = useState(0);
   const quantityRowRef = useRef(null);
   const { items, addItem, increaseItem, decreaseItem, removeItem, itemCount, total } = useCart();
+  const { logout } = useAuth();
 
   useEffect(() => {
     setSelectedImage(gallery[0]);
@@ -96,42 +98,94 @@ export default function MenuItem() {
     setIsCartOpen(true);
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
   const subtitle = product?.detail?.subtitle ?? product.description;
   const unitPrice = product?.price ?? 0;
   const totalPrice = unitPrice * quantity;
 
   return (
     <div className="min-h-screen bg-cream">
-      <header className="border-b border-[#eadfd5] bg-white shadow-[0_6px_16px_rgba(0,0,0,0.06)]">
-        <div className="mx-auto grid w-[min(1200px,92vw)] grid-cols-[1fr_auto_1fr] items-center gap-4 py-4 md:py-5">
-          <div className="flex items-center justify-start">
+      <header className="bg-cream pb-6 pt-6">
+        <div className="mx-auto w-[min(1200px,92vw)]">
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-[18px] border border-[#eadfd5] bg-white px-5 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.08)] animate-fade-up">
             <HeaderNavDrawer
+              active="home"
               onNavigateHome={() => navigate('/home')}
               onNavigateOrders={() => navigate('/mis-pedidos')}
+              trigger={
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-[#f2f5fb] shadow-[0_4px_10px_rgba(0,0,0,0.08)]">
+                    <img className="h-9 w-auto" src={logo} alt="Sena Food" />
+                  </span>
+                  <div>
+                    <span className="block text-[15px] font-semibold tracking-[0.08em] text-title">
+                      SENAFOOD
+                    </span>
+                    <span className="block text-[11px] text-muted">Cafeteria SENA Salomia</span>
+                  </div>
+                </div>
+              }
+              triggerClassName="rounded-[14px] px-2 py-1 transition hover:bg-[#f8f4ef]"
+              triggerLabel="Abrir menu de navegacion"
+              menuClassName="mt-4 w-[190px]"
             />
-          </div>
-          <div className="flex justify-center">
-            <img className="h-14 w-auto sm:h-16 lg:h-20" src={logo} alt="Sena Food" />
-          </div>
-          <div className="flex items-center justify-end gap-4">
-            <button
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#eadfd5] bg-white shadow-[0_4px_10px_rgba(0,0,0,0.08)]"
-              type="button"
-              aria-label="Perfil"
-              onClick={() => navigate('/perfil')}
-            >
-              <img className="h-[18px] w-[18px]" src={profile} alt="Perfil" />
-            </button>
-            <button
-              className="flex items-center gap-2 rounded-full bg-orange px-5 py-2 text-[12px] font-semibold text-white shadow-[0_10px_18px_rgba(242,106,29,0.26)]"
-              type="button"
-              aria-label={`Carrito (${itemCount})`}
-              onClick={() => setIsCartOpen(true)}
-            >
-              <img className="h-4 w-4 brightness-0 invert" src={cart} alt="Carrito" />
-              Carrito
-              <span className="sr-only">{itemCount}</span>
-            </button>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#e6edf6] bg-white text-title shadow-[0_6px_16px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.12)]"
+                type="button"
+                aria-label={`Carrito (${itemCount})`}
+                onClick={() => setIsCartOpen(true)}
+              >
+                <img className="h-4 w-4" src={cart} alt="Carrito" />
+                {itemCount > 0 ? (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-orange px-1 text-[9px] font-semibold text-white">
+                    {itemCount}
+                  </span>
+                ) : null}
+              </button>
+              <button
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-orange text-white shadow-[0_10px_18px_rgba(242,106,29,0.28)] transition hover:-translate-y-0.5"
+                type="button"
+                aria-label="Perfil"
+                onClick={() => navigate('/perfil')}
+              >
+                <img className="h-4 w-4 brightness-0 invert" src={profile} alt="Perfil" />
+              </button>
+              <button
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#ffd5d5] bg-[#fff7f7] text-[#e24c3b] shadow-[0_6px_14px_rgba(226,76,59,0.12)] transition hover:-translate-y-0.5"
+                type="button"
+                aria-label="Cerrar sesion"
+                onClick={handleLogout}
+              >
+                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path
+                    d="M8 4h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M8 10h8"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M6 7l-3 3 3 3"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </header>

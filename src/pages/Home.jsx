@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import CartDrawer from '../components/CartDrawer.jsx';
 import HeaderNavDrawer from '../components/HeaderNavDrawer.jsx';
 import { useCart } from '../context/CartContext.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import {
   cart,
   cartMenu,
@@ -50,6 +51,7 @@ export default function Home() {
   const [productsError, setProductsError] = useState('');
   const [carouselIndexMap, setCarouselIndexMap] = useState({});
   const { items, addItem, increaseItem, decreaseItem, removeItem, itemCount, total } = useCart();
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -134,6 +136,11 @@ export default function Home() {
     navigate('/checkout', { state: { fromCart: true } });
   };
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
+
   useEffect(() => {
     if (location.state?.openCart) {
       setIsCartOpen(true);
@@ -200,37 +207,83 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-cream">
-      <header className="border-b border-[#eadfd5] bg-white shadow-[0_6px_16px_rgba(0,0,0,0.06)]">
-        <div className="mx-auto grid w-[min(1200px,92vw)] grid-cols-[1fr_auto_1fr] items-center gap-4 py-4 md:py-5">
-          <div className="flex items-center justify-start">
+      <header className="bg-cream pb-6 pt-6">
+        <div className="mx-auto w-[min(1200px,92vw)]">
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-[18px] border border-[#eadfd5] bg-white px-5 py-4 shadow-[0_10px_24px_rgba(0,0,0,0.08)] animate-fade-up">
             <HeaderNavDrawer
               active="home"
               onNavigateHome={() => scrollTo('top')}
               onNavigateOrders={() => navigate('/mis-pedidos')}
+              trigger={
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-[#f2f5fb] shadow-[0_4px_10px_rgba(0,0,0,0.08)]">
+                    <img className="h-9 w-auto" src={logo} alt="Sena Food" />
+                  </span>
+                  <div>
+                    <span className="block text-[15px] font-semibold tracking-[0.08em] text-title">
+                      SENAFOOD
+                    </span>
+                    <span className="block text-[11px] text-muted">Cafeteria SENA Salomia</span>
+                  </div>
+                </div>
+              }
+              triggerClassName="rounded-[14px] px-2 py-1 transition hover:bg-[#f8f4ef]"
+              triggerLabel="Abrir menu de navegacion"
+              menuClassName="mt-4 w-[190px]"
             />
-          </div>
-          <div className="flex justify-center">
-            <img className="h-14 w-auto sm:h-16 lg:h-20" src={logo} alt="Sena Food" />
-          </div>
-          <div className="flex items-center justify-end gap-4">
-            <button
-              className="flex h-9 w-9 items-center justify-center rounded-full border border-[#eadfd5] bg-white shadow-[0_4px_10px_rgba(0,0,0,0.08)]"
-              type="button"
-              aria-label="Perfil"
-              onClick={() => navigate('/perfil')}
-            >
-              <img className="h-[18px] w-[18px]" src={profile} alt="Perfil" />
-            </button>
-            <button
-              className="flex items-center gap-2 rounded-full bg-orange px-5 py-2 text-[12px] font-semibold text-white shadow-[0_10px_18px_rgba(242,106,29,0.26)]"
-              type="button"
-              onClick={handleOpenCart}
-              aria-label={`Carrito (${itemCount})`}
-            >
-              <img className="h-4 w-4 brightness-0 invert" src={cart} alt="Carrito" />
-              Carrito
-              <span className="sr-only">{itemCount}</span>
-            </button>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button
+                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#e6edf6] bg-white text-title shadow-[0_6px_16px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.12)]"
+                type="button"
+                aria-label={`Carrito (${itemCount})`}
+                onClick={handleOpenCart}
+              >
+                <img className="h-4 w-4" src={cart} alt="Carrito" />
+                {itemCount > 0 ? (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-orange px-1 text-[9px] font-semibold text-white">
+                    {itemCount}
+                  </span>
+                ) : null}
+              </button>
+              <button
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-orange text-white shadow-[0_10px_18px_rgba(242,106,29,0.28)] transition hover:-translate-y-0.5"
+                type="button"
+                aria-label="Perfil"
+                onClick={() => navigate('/perfil')}
+              >
+                <img className="h-4 w-4 brightness-0 invert" src={profile} alt="Perfil" />
+              </button>
+              <button
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-[#ffd5d5] bg-[#fff7f7] text-[#e24c3b] shadow-[0_6px_14px_rgba(226,76,59,0.12)] transition hover:-translate-y-0.5"
+                type="button"
+                aria-label="Cerrar sesion"
+                onClick={handleLogout}
+              >
+                <svg className="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path
+                    d="M8 4h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H8"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M8 10h8"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M6 7l-3 3 3 3"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -239,24 +292,46 @@ export default function Home() {
         <section className="border-b border-[#eadfd5] bg-[linear-gradient(90deg,#fbf7f3_0%,#f0e9e2_55%,#fbf7f3_100%)]">
           <div className="mx-auto grid w-[min(1200px,92vw)] grid-cols-1 gap-12 py-12 lg:grid-cols-[1.1fr_0.9fr]">
             <div>
-              <img className="mb-4 h-11 w-11 opacity-50" src={riceBowl} alt="" />
-              <span className="inline-flex items-center gap-2 rounded-full bg-orange px-4 py-1.5 text-[11px] font-medium text-white shadow-[0_6px_14px_rgba(242,106,29,0.22)]">
+              <img
+                className="mb-4 h-11 w-11 opacity-50 animate-fade-up"
+                style={{ animationDelay: '40ms' }}
+                src={riceBowl}
+                alt=""
+              />
+              <span
+                className="inline-flex items-center gap-2 rounded-full bg-orange px-4 py-1.5 text-[11px] font-medium text-white shadow-[0_6px_14px_rgba(242,106,29,0.22)] animate-fade-up"
+                style={{ animationDelay: '90ms' }}
+              >
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/90 shadow-[0_4px_8px_rgba(0,0,0,0.08)]">
                   <img className="h-[11px] w-[11px] brightness-0 invert" src={starIcon} alt="" />
                 </span>
                 Comida fresca preparada diariamente
               </span>
-              <h1 className="mt-5 text-[26px] font-semibold text-title sm:text-[30px]">
+              <h1
+                className="mt-5 text-[26px] font-semibold text-title sm:text-[30px] animate-fade-up"
+                style={{ animationDelay: '140ms' }}
+              >
                 Almuerzos saludables
               </h1>
-              <h2 className="text-[26px] font-semibold text-orange sm:text-[30px]">para tu dia en el SENA</h2>
-              <p className="mt-4 max-w-[460px] text-[14px] leading-relaxed text-muted">
+              <h2
+                className="text-[26px] font-semibold text-orange sm:text-[30px] animate-fade-up"
+                style={{ animationDelay: '180ms' }}
+              >
+                para tu dia en el SENA
+              </h2>
+              <p
+                className="mt-4 max-w-[460px] text-[14px] leading-relaxed text-muted animate-fade-up"
+                style={{ animationDelay: '220ms' }}
+              >
                 Disfruta de comida casera y nutritiva. Ordena facil, paga rapido y recoge con
                 tu token.
               </p>
-              <div className="mt-7 flex items-center gap-4">
+              <div
+                className="mt-7 flex items-center gap-4 animate-fade-up"
+                style={{ animationDelay: '260ms' }}
+              >
                 <button
-                  className="flex items-center gap-2 rounded-full bg-orange px-6 py-2.5 text-[12px] font-semibold text-white shadow-[0_10px_18px_rgba(242,106,29,0.26)]"
+                  className="flex items-center gap-2 rounded-full bg-orange px-6 py-2.5 text-[12px] font-semibold text-white shadow-[0_10px_18px_rgba(242,106,29,0.26)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_24px_rgba(242,106,29,0.3)]"
                   type="button"
                   onClick={() => scrollTo('menu')}
                 >
@@ -266,15 +341,21 @@ export default function Home() {
                   </span>
                 </button>
                 <button
-                  className="rounded-full border border-title px-6 py-2.5 text-[12px] font-semibold text-title"
+                  className="rounded-full border border-title px-6 py-2.5 text-[12px] font-semibold text-title transition hover:-translate-y-0.5 hover:bg-title hover:text-white"
                   type="button"
                   onClick={() => scrollTo('faq')}
                 >
                   Ver FAQ
                 </button>
               </div>
-              <div className="mt-8 h-px max-w-[460px] bg-[#e5ded6]" />
-              <div className="mt-5 flex max-w-[460px] items-center justify-between">
+              <div
+                className="mt-8 h-px max-w-[460px] bg-[#e5ded6] animate-fade-up"
+                style={{ animationDelay: '300ms' }}
+              />
+              <div
+                className="mt-5 flex max-w-[460px] items-center justify-between animate-fade-up"
+                style={{ animationDelay: '340ms' }}
+              >
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-[0_6px_12px_rgba(0,0,0,0.1)]">
@@ -296,8 +377,14 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="relative h-[400px] max-lg:mx-auto max-lg:h-[380px] max-lg:w-full">
-              <div className="absolute left-[4%] top-[86px] flex items-center gap-3 rounded-[20px] bg-white px-4 py-3.5 shadow-[0_12px_24px_rgba(0,0,0,0.12)] max-lg:left-[2%] max-lg:top-[58px]">
+            <div
+              className="relative h-[400px] max-lg:mx-auto max-lg:h-[380px] max-lg:w-full animate-fade-up"
+              style={{ animationDelay: '200ms' }}
+            >
+              <div
+                className="absolute left-[4%] top-[86px] flex items-center gap-3 rounded-[20px] bg-white px-4 py-3.5 shadow-[0_12px_24px_rgba(0,0,0,0.12)] animate-float-slow max-lg:left-[2%] max-lg:top-[58px]"
+                style={{ animationDelay: '0.3s' }}
+              >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange">
                   <img className="h-4 w-4 brightness-0 invert" src={naturalIcon} alt="Natural" />
                 </div>
@@ -307,7 +394,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="absolute right-0 top-[10px] w-[60%] overflow-hidden rounded-[20px] border-[5px] border-white shadow-[0_16px_32px_rgba(0,0,0,0.18)] max-lg:w-[68%]">
+              <div className="absolute right-0 top-[10px] w-[60%] overflow-hidden rounded-[20px] border-[5px] border-white shadow-[0_16px_32px_rgba(0,0,0,0.18)] animate-fade-in max-lg:w-[68%]">
                 <div className="relative">
                   <img className="h-[210px] w-full object-cover" src={lunchFish} alt="Almuerzo del dia" />
                   <div className="absolute inset-x-0 bottom-0 h-[68px] bg-gradient-to-t from-black/45 to-transparent" />
@@ -329,7 +416,10 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="absolute left-[8%] bottom-[-8px] w-[46%] overflow-hidden rounded-[20px] border-[5px] border-white shadow-[0_14px_28px_rgba(0,0,0,0.16)] max-lg:left-[4%] max-lg:bottom-[-4px] max-lg:w-[52%]">
+              <div
+                className="absolute left-[8%] bottom-[-8px] w-[46%] overflow-hidden rounded-[20px] border-[5px] border-white shadow-[0_14px_28px_rgba(0,0,0,0.16)] animate-float max-lg:left-[4%] max-lg:bottom-[-4px] max-lg:w-[52%]"
+                style={{ animationDelay: '0.6s' }}
+              >
                 <img
                   className="h-[160px] w-full object-cover"
                   src={ingredientsFresh}
@@ -340,7 +430,10 @@ export default function Home() {
                 </span>
               </div>
 
-              <div className="absolute right-[4%] bottom-[50px] flex items-center gap-3 rounded-[20px] bg-white px-4 py-3.5 shadow-[0_12px_24px_rgba(0,0,0,0.12)] max-lg:bottom-[40px]">
+              <div
+                className="absolute right-[4%] bottom-[50px] flex items-center gap-3 rounded-[20px] bg-white px-4 py-3.5 shadow-[0_12px_24px_rgba(0,0,0,0.12)] animate-float-slow max-lg:bottom-[40px]"
+                style={{ animationDelay: '0.9s' }}
+              >
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-orange">
                   <img className="h-4 w-4 brightness-0 invert" src={clockIcon} alt="Reloj" />
                 </span>
@@ -350,7 +443,10 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="absolute right-[18%] bottom-[-2px] h-[50px] w-[50px] rounded-full border-[5px] border-white bg-white shadow-[0_8px_16px_rgba(0,0,0,0.12)] max-lg:right-[16%] max-lg:bottom-[-4px]">
+              <div
+                className="absolute right-[18%] bottom-[-2px] h-[50px] w-[50px] rounded-full border-[5px] border-white bg-white shadow-[0_8px_16px_rgba(0,0,0,0.12)] animate-float max-lg:right-[16%] max-lg:bottom-[-4px]"
+                style={{ animationDelay: '1.1s' }}
+              >
                 <img className="h-full w-full rounded-full object-cover opacity-45" src={saladHome} alt="" />
               </div>
             </div>
@@ -360,16 +456,17 @@ export default function Home() {
         <section className="border-t border-[#eadfd5] py-10" id="menu">
           <div className="mx-auto w-[min(1200px,92vw)]">
             <div className="text-center">
-              <h2 className="text-[20px] text-title">Nuestro Menú</h2>
-              <p className="mt-1 text-[12px] text-muted">
+              <h2 className="text-[20px] text-title animate-fade-up">Nuestro Menú</h2>
+              <p className="mt-1 text-[12px] text-muted animate-fade-up" style={{ animationDelay: '80ms' }}>
                 Ingredientes frescos, preparados con amor cada día para la comunidad del SENA
               </p>
             </div>
             <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-              {products.map((product) => (
+              {products.map((product, index) => (
                 <article
-                  className="overflow-hidden rounded-[18px] bg-white shadow-[0_6px_14px_rgba(0,0,0,0.06)]"
+                  className="group overflow-hidden rounded-[18px] bg-white shadow-[0_6px_14px_rgba(0,0,0,0.06)] transition-transform duration-300 hover:-translate-y-1 animate-reveal"
                   key={product.id}
+                  style={{ animationDelay: `${index * 90}ms` }}
                 >
                   <Link to={`/menu/${product.id}`} aria-label={`Ver ${product.name}`}>
                     {(() => {
@@ -381,7 +478,7 @@ export default function Home() {
                       const activeImage = images[activeIndex] ?? product.image;
                       return (
                         <img
-                          className="h-[150px] w-full object-cover"
+                          className="h-[150px] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                           src={activeImage}
                           alt={product.name}
                         />
@@ -398,7 +495,7 @@ export default function Home() {
                     <div className="mt-3 flex items-center justify-between text-[12px] text-[#e75a1a]">
                       <span>{formatCop(product.price)}</span>
                       <button
-                        className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#f0e4da] bg-white"
+                        className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#f0e4da] bg-white transition hover:bg-[#fff4eb]"
                         type="button"
                         onClick={() => handleAddToCart(product)}
                         aria-label="Agregar al carrito"
@@ -419,12 +516,18 @@ export default function Home() {
         <section className="py-10" id="steps">
           <div className="mx-auto w-[min(1200px,92vw)]">
             <div className="text-center">
-              <h2 className="text-[20px] text-title">¿Como funciona?</h2>
-              <p className="mt-1 text-[12px] text-muted">Tu almuerzo en 3 pasos simples</p>
+              <h2 className="text-[20px] text-title animate-fade-up">¿Como funciona?</h2>
+              <p className="mt-1 text-[12px] text-muted animate-fade-up" style={{ animationDelay: '80ms' }}>
+                Tu almuerzo en 3 pasos simples
+              </p>
             </div>
             <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-3 md:gap-10">
               {steps.map((step, index) => (
-                <div className="text-center" key={step.title}>
+                <div
+                  className="text-center animate-fade-up"
+                  style={{ animationDelay: `${index * 140}ms` }}
+                  key={step.title}
+                >
                   <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#f28c28] shadow-soft">
                     <img className="h-6 w-6" src={step.image} alt={step.title} />
                   </div>
@@ -442,16 +545,19 @@ export default function Home() {
         <section className="border-t border-[#eadfd5] bg-[#fbf7f3] py-12" id="faq">
           <div className="mx-auto w-[min(980px,92vw)]">
             <div className="text-center">
-              <h2 className="text-[20px] text-title">Preguntas frecuentes</h2>
-              <p className="mt-1 text-[12px] text-muted">Respuestas rápidas sobre tus pedidos</p>
+              <h2 className="text-[20px] text-title animate-fade-up">Preguntas frecuentes</h2>
+              <p className="mt-1 text-[12px] text-muted animate-fade-up" style={{ animationDelay: '80ms' }}>
+                Respuestas rápidas sobre tus pedidos
+              </p>
             </div>
             <div className="mt-8 space-y-3">
               {faqs.map((faq, index) => {
                 const isOpen = openFaqIndex === index;
                 return (
                   <div
-                    className="rounded-[16px] border border-[#eadfd5] bg-white shadow-soft"
+                    className="rounded-[16px] border border-[#eadfd5] bg-white shadow-soft animate-fade-up"
                     key={faq.question}
+                    style={{ animationDelay: `${index * 70}ms` }}
                   >
                     <button
                       className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
@@ -481,7 +587,7 @@ export default function Home() {
                     <div
                       id={`faq-panel-${index}`}
                       className={`grid transition-all duration-300 ease-out ${
-                        isOpen ? 'grid-rows-[1fr] pb-4' : 'grid-rows-[0fr]'
+                        isOpen ? 'grid-rows-[1fr] pb-4 opacity-100' : 'grid-rows-[0fr] opacity-0'
                       }`}
                     >
                       <div className="overflow-hidden px-5">
