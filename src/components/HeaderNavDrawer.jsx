@@ -12,6 +12,7 @@ export default function HeaderNavDrawer({
   const [open, setOpen] = useState(false);
   const [allowTap, setAllowTap] = useState(false);
   const menuRef = useRef(null);
+  const closeTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return undefined;
@@ -24,6 +25,15 @@ export default function HeaderNavDrawer({
     }
     media.addListener(update);
     return () => media.removeListener(update);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (closeTimeoutRef.current) {
+        window.clearTimeout(closeTimeoutRef.current);
+        closeTimeoutRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -71,12 +81,23 @@ export default function HeaderNavDrawer({
 
   const handleMouseEnter = () => {
     if (allowTap) return;
+    if (closeTimeoutRef.current) {
+      window.clearTimeout(closeTimeoutRef.current);
+      closeTimeoutRef.current = null;
+    }
     setOpen(true);
   };
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = (event) => {
     if (allowTap) return;
-    setOpen(false);
+    if (menuRef.current && menuRef.current.contains(event.relatedTarget)) return;
+    if (closeTimeoutRef.current) {
+      window.clearTimeout(closeTimeoutRef.current);
+    }
+    closeTimeoutRef.current = window.setTimeout(() => {
+      setOpen(false);
+      closeTimeoutRef.current = null;
+    }, 1500);
   };
 
   const triggerContent = trigger ?? (
