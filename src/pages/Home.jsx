@@ -383,7 +383,7 @@ export default function Home() {
               style={{ animationDelay: '200ms' }}
             >
               <div
-                className="absolute left-[4%] top-[86px] flex items-center gap-3 rounded-[20px] bg-white px-4 py-3.5 shadow-[0_12px_24px_rgba(0,0,0,0.12)] animate-float-slow max-lg:left-[2%] max-lg:top-[58px]"
+                className="absolute left-[4%] top-[86px] flex items-center gap-3 rounded-[20px] bg-white px-4 py-3.5 shadow-[0_12px_24px_rgba(0,0,0,0.12)] animate-float-slow transition duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_18px_32px_rgba(0,0,0,0.18)] max-lg:left-[2%] max-lg:top-[58px]"
                 style={{ animationDelay: '0.3s' }}
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange">
@@ -395,7 +395,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="absolute right-0 top-[10px] w-[60%] overflow-hidden rounded-[20px] border-[5px] border-white shadow-[0_16px_32px_rgba(0,0,0,0.18)] animate-fade-in max-lg:w-[68%]">
+              <div className="absolute right-0 top-[10px] w-[60%] overflow-hidden rounded-[20px] border-[5px] border-white shadow-[0_16px_32px_rgba(0,0,0,0.18)] animate-fade-in transition duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_22px_40px_rgba(0,0,0,0.22)] max-lg:w-[68%]">
                 <div className="relative">
                   <img className="h-[210px] w-full object-cover" src={lunchFish} alt="Almuerzo del dia" />
                   <div className="absolute inset-x-0 bottom-0 h-[68px] bg-gradient-to-t from-black/45 to-transparent" />
@@ -418,7 +418,7 @@ export default function Home() {
               </div>
 
               <div
-                className="absolute left-[8%] bottom-[-8px] w-[46%] overflow-hidden rounded-[20px] border-[5px] border-white shadow-[0_14px_28px_rgba(0,0,0,0.16)] animate-float max-lg:left-[4%] max-lg:bottom-[-4px] max-lg:w-[52%]"
+                className="absolute left-[8%] bottom-[-8px] w-[46%] overflow-hidden rounded-[20px] border-[5px] border-white shadow-[0_14px_28px_rgba(0,0,0,0.16)] animate-float transition duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_20px_36px_rgba(0,0,0,0.2)] max-lg:left-[4%] max-lg:bottom-[-4px] max-lg:w-[52%]"
                 style={{ animationDelay: '0.6s' }}
               >
                 <img
@@ -432,7 +432,7 @@ export default function Home() {
               </div>
 
               <div
-                className="absolute right-[4%] bottom-[50px] flex items-center gap-3 rounded-[20px] bg-white px-4 py-3.5 shadow-[0_12px_24px_rgba(0,0,0,0.12)] animate-float-slow max-lg:bottom-[40px]"
+                className="absolute right-[4%] bottom-[50px] flex items-center gap-3 rounded-[20px] bg-white px-4 py-3.5 shadow-[0_12px_24px_rgba(0,0,0,0.12)] animate-float-slow transition duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_18px_32px_rgba(0,0,0,0.18)] max-lg:bottom-[40px]"
                 style={{ animationDelay: '0.9s' }}
               >
                 <span className="flex h-10 w-10 items-center justify-center rounded-full bg-orange">
@@ -445,7 +445,7 @@ export default function Home() {
               </div>
 
               <div
-                className="absolute right-[18%] bottom-[-2px] h-[50px] w-[50px] rounded-full border-[5px] border-white bg-white shadow-[0_8px_16px_rgba(0,0,0,0.12)] animate-float max-lg:right-[16%] max-lg:bottom-[-4px]"
+                className="absolute right-[18%] bottom-[-2px] h-[50px] w-[50px] rounded-full border-[5px] border-white bg-white shadow-[0_8px_16px_rgba(0,0,0,0.12)] animate-float transition duration-300 ease-out hover:scale-105 hover:shadow-[0_14px_24px_rgba(0,0,0,0.18)] max-lg:right-[16%] max-lg:bottom-[-4px]"
                 style={{ animationDelay: '1.1s' }}
               >
                 <img className="h-full w-full rounded-full object-cover opacity-45" src={saladHome} alt="" />
