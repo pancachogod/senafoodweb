@@ -223,88 +223,89 @@ export default function Checkout() {
 
       <main className="border-b border-[#eadfd5] bg-[linear-gradient(90deg,#fbf7f3_0%,#f0e9e2_55%,#fbf7f3_100%)]">
         <div className="mx-auto w-[min(1200px,92vw)] py-8">
-          <button
-            className="inline-flex items-center gap-2 text-[12px] font-medium text-muted"
-            type="button"
-            onClick={() => navigate('/home', { state: { openCart: true } })}
-          >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path
-                d="M10.5 3.25L6 8l4.5 4.75"
-                stroke="currentColor"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Volver al carrito
-          </button>
+          <div className="mx-auto w-full max-w-[720px]">
+            <button
+              className="inline-flex items-center gap-2 text-[12px] font-medium text-muted"
+              type="button"
+              onClick={() => navigate('/home', { state: { openCart: true } })}
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path
+                  d="M10.5 3.25L6 8l4.5 4.75"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Volver al carrito
+            </button>
 
-          <h1 className="mt-4 text-[18px] font-semibold text-title">Método de pago</h1>
+            <h1 className="mt-4 text-[18px] font-semibold text-title">Método de pago</h1>
 
-          <div className="mt-5 rounded-[18px] bg-white px-6 py-5 shadow-soft">
-            <h2 className="text-[12px] font-semibold text-title">Resumen del pedido</h2>
+            <div className="mt-5 rounded-[18px] bg-white px-6 py-5 shadow-soft">
+              <h2 className="text-[12px] font-semibold text-title">Resumen del pedido</h2>
 
-            {hasItems ? (
-              <div className="mt-4 space-y-3 border-b border-[#f2e6dc] pb-4">
-                {summaryItems.map((item) => (
-                  <div className="flex items-start justify-between gap-4" key={item.id}>
-                    <div>
-                      <p className="text-[12px] font-semibold text-title">{item.name}</p>
-                      <p className="text-[10px] text-muted">
-                        {item.description || 'Incluye arroz, ensalada y bebida natural'}
-                      </p>
+              {hasItems ? (
+                <div className="mt-4 space-y-3 border-b border-[#f2e6dc] pb-4">
+                  {summaryItems.map((item) => (
+                    <div className="flex items-start justify-between gap-4" key={item.id}>
+                      <div>
+                        <p className="text-[12px] font-semibold text-title">{item.name}</p>
+                        <p className="text-[10px] text-muted">
+                          {item.description || 'Incluye arroz, ensalada y bebida natural'}
+                        </p>
+                      </div>
+                      <span className="text-[11px] text-title">
+                        {formatCop(item.price)} x {item.quantity}
+                      </span>
                     </div>
-                    <span className="text-[11px] text-title">
-                      {formatCop(item.price)} x {item.quantity}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="mt-4 text-[11px] text-muted">No hay articulos en tu carrito.</p>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-4 text-[11px] text-muted">No hay articulos en tu carrito.</p>
+              )}
 
-            <div className="mt-4 space-y-2 text-[11px] text-muted">
-              <div className="flex items-center justify-between">
-                <span>Cliente:</span>
-                <span className="text-title">{profileData.name}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Teléfono:</span>
-                <span className="text-title">{profileData.phone}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Método de Pago:</span>
-                <span className="text-title">Nequi</span>
-              </div>
-              <div className="flex items-center justify-between pt-2 text-[12px] font-semibold text-title">
-                <span>Total</span>
-                <span className="text-orange">{formatCop(total)}</span>
+              <div className="mt-4 space-y-2 text-[11px] text-muted">
+                <div className="flex items-center justify-between">
+                  <span>Cliente:</span>
+                  <span className="text-title">{profileData.name}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Teléfono:</span>
+                  <span className="text-title">{profileData.phone}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Método de Pago:</span>
+                  <span className="text-title">Nequi</span>
+                </div>
+                <div className="flex items-center justify-between pt-2 text-[12px] font-semibold text-title">
+                  <span>Total</span>
+                  <span className="text-orange">{formatCop(total)}</span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="mt-5">
-            <p className="text-[12px] font-semibold text-title">Método de pago</p>
-            <button
-              className="mt-3 flex w-full items-center justify-between rounded-[14px] border border-[#b084ff] bg-white px-4 py-3 shadow-[0_8px_18px_rgba(176,132,255,0.2)]"
-              type="button"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-[#f1e9ff]">
-                  <img className="h-6 w-6" src={nequi} alt="Nequi" />
+            <div className="mt-5">
+              <p className="text-[12px] font-semibold text-title">Método de pago</p>
+              <button
+                className="mt-3 flex w-full items-center justify-between rounded-[14px] border border-[#b084ff] bg-white px-4 py-3 shadow-[0_8px_18px_rgba(176,132,255,0.2)]"
+                type="button"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-[#f1e9ff]">
+                    <img className="h-6 w-6" src={nequi} alt="Nequi" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[12px] font-semibold text-title">Nequi</p>
+                    <p className="text-[10px] text-muted">Pago digital instantáneo</p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <p className="text-[12px] font-semibold text-title">Nequi</p>
-                  <p className="text-[10px] text-muted">Pago digital instantáneo</p>
-                </div>
-              </div>
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#8c5bff] text-[12px] text-white">
-                ✓
-              </span>
-            </button>
-          </div>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#8c5bff] text-[12px] text-white">
+                  ✓
+                </span>
+              </button>
+            </div>
 
             <button
               className="mt-5 w-full rounded-full bg-orange py-2.5 text-[12px] font-semibold text-white shadow-[0_10px_18px_rgba(242,106,29,0.26)] disabled:cursor-not-allowed disabled:bg-[#e7b79f]"
@@ -317,6 +318,7 @@ export default function Checkout() {
             >
               Confirmar Pedido
             </button>
+          </div>
         </div>
       </main>
 
