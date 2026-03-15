@@ -266,17 +266,14 @@ export default function Profile() {
             />
             <div className="flex items-center gap-2 sm:gap-3">
               <button
-                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#e6edf6] bg-white text-title shadow-[0_6px_16px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_20px_rgba(15,23,42,0.12)]"
+                className="flex items-center gap-2 rounded-full bg-orange px-5 py-2 text-[12px] font-semibold text-white shadow-[0_10px_18px_rgba(242,106,29,0.26)]"
                 type="button"
                 aria-label={`Carrito (${itemCount})`}
                 onClick={() => setIsCartOpen(true)}
               >
-                <img className="h-4 w-4" src={cart} alt="Carrito" />
-                {itemCount > 0 ? (
-                  <span className="absolute -right-1 -top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-orange px-1 text-[9px] font-semibold text-white">
-                    {itemCount}
-                  </span>
-                ) : null}
+                <img className="h-4 w-4 brightness-0 invert" src={cart} alt="Carrito" />
+                Carrito
+                <span className="sr-only">{itemCount}</span>
               </button>
               <button
                 className="flex h-10 w-10 items-center justify-center rounded-full bg-orange text-white shadow-[0_10px_18px_rgba(242,106,29,0.28)] transition hover:-translate-y-0.5"
