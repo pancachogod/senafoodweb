@@ -1,4 +1,36 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const PRODUCTION_API_URL = 'https://senafoodweb-production.up.railway.app';
+
+const isLocalHost = (host) => host === 'localhost' || host === '127.0.0.1';
+
+const normalizeConfiguredApiUrl = (configuredUrl) => {
+  if (!configuredUrl) {
+    return '';
+  }
+
+  if (typeof window === 'undefined') {
+    return configuredUrl;
+  }
+
+  try {
+    const parsedUrl = new URL(configuredUrl, window.location.origin);
+    if (!isLocalHost(window.location.hostname) && isLocalHost(parsedUrl.hostname)) {
+      return PRODUCTION_API_URL;
+    }
+    return parsedUrl.toString().replace(/\/$/, '');
+  } catch {
+    return configuredUrl;
+  }
+};
+
+const getDefaultApiUrl = () => {
+  if (typeof window !== 'undefined' && isLocalHost(window.location.hostname)) {
+    return 'http://localhost:8000';
+  }
+
+  return PRODUCTION_API_URL;
+};
+
+const API_URL = normalizeConfiguredApiUrl(import.meta.env.VITE_API_URL) || getDefaultApiUrl();
 
 export const buildApiUrl = (path) => {
   if (path.startsWith('http://') || path.startsWith('https://')) {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { cart, logo, profile } from '../assets/index.js';
 import CartDrawer from '../components/CartDrawer.jsx';
@@ -44,11 +44,18 @@ export default function MenuItem() {
     products.find((item) => String(item.id) === id || item.code === id) ??
     menuItems.find((item) => item.id === id) ??
     menuItems[0];
-  const gallery = product?.detail?.gallery?.length
-    ? product.detail.gallery
-    : product?.image
-      ? [product.image]
-      : [];
+  const productKey = product?.id ?? product?.code ?? product?.name ?? 'menu-item';
+  const gallery = useMemo(() => {
+    if (product?.detail?.gallery?.length) {
+      return product.detail.gallery;
+    }
+
+    if (product?.image) {
+      return [product.image];
+    }
+
+    return [];
+  }, [product?.detail?.gallery, product?.image]);
   const [selectedImage, setSelectedImage] = useState(gallery[0]);
   const [quantity, setQuantity] = useState(1);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -62,7 +69,7 @@ export default function MenuItem() {
   useEffect(() => {
     setSelectedImage(gallery[0]);
     setQuantity(1);
-  }, [gallery]);
+  }, [productKey, gallery]);
 
   useEffect(() => {
     if (isOutOfStock) {
