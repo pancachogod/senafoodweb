@@ -1,4 +1,44 @@
 import { apiRequest } from './client.js';
+import { defaultProductImage } from '../assets/index.js';
+import { menuItems } from '../data/menu.js';
+
+const localByCode = new Map(menuItems.map((item) => [item.id, item]));
+
+const normalizeText = (value) =>
+  String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+const inferItemCode = (item) => {
+  const searchText = `${normalizeText(item?.name)} ${normalizeText(item?.description)}`;
+
+  if (searchText.includes('pollo')) {
+    return 'pollo';
+  }
+
+  if (searchText.includes('pescado') || searchText.includes('tilapia')) {
+    return 'pescado';
+  }
+
+  return null;
+};
+
+const findLocalItem = (item) => {
+  const inferredCode = inferItemCode(item);
+  if (inferredCode) {
+    return localByCode.get(inferredCode);
+  }
+
+  const normalizedName = normalizeText(item?.name);
+  return menuItems.find((entry) => normalizeText(entry.name) === normalizedName);
+};
+
+const isReliableImageUrl = (value) => {
+  const normalized = String(value || '').trim();
+  return normalized.startsWith('http://') || normalized.startsWith('https://') || normalized.startsWith('data:');
+};
 
 const mapPayment = (payment) => ({
   id: payment.id,
@@ -9,15 +49,24 @@ const mapPayment = (payment) => ({
   createdAt: payment.created_at ?? payment.createdAt,
 });
 
-const mapOrderItem = (item) => ({
-  id: item.id,
-  productId: item.product_id ?? null,
-  name: item.name,
-  description: item.description ?? '',
-  price: item.price,
-  image: item.image_url ?? item.image ?? null,
-  quantity: item.quantity,
-});
+const mapOrderItem = (item) => {
+  const fallback = findLocalItem(item);
+  const imageFallback = fallback?.image ?? defaultProductImage;
+  const image = isReliableImageUrl(item?.image_url ?? item?.image)
+    ? item.image_url ?? item.image
+    : imageFallback;
+
+  return {
+    id: item.id,
+    productId: item.product_id ?? null,
+    name: item.name,
+    description: item.description ?? '',
+    price: item.price,
+    image,
+    imageFallback,
+    quantity: item.quantity,
+  };
+};
 
 const mapOrder = (order) => {
   const latestPayment = order.latest_payment ? mapPayment(order.latest_payment) : null;

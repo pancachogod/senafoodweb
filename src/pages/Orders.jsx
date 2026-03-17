@@ -513,8 +513,14 @@ export default function Orders() {
                                 >
                                   <img
                                     className="h-12 w-14 rounded-[12px] object-cover"
-                                    src={item.image || logo}
+                                    src={item.image || item.imageFallback || logo}
                                     alt={item.name}
+                                    onError={(event) => {
+                                      const fallback = item.imageFallback || logo;
+                                      if (event.currentTarget.src !== fallback) {
+                                        event.currentTarget.src = fallback;
+                                      }
+                                    }}
                                   />
                                   <div className="flex-1">
                                     <p className="text-[12px] font-semibold text-title">{item.name}</p>
