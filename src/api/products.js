@@ -1,4 +1,5 @@
 import { apiRequest } from './client.js';
+import { defaultProductImage } from '../assets/index.js';
 import { menuItems } from '../data/menu.js';
 
 const localByCode = new Map(menuItems.map((item) => [item.id, item]));
@@ -40,10 +41,29 @@ const findLocalProduct = (product) => {
   return menuItems.find((item) => normalizeText(item.name) === normalizedName);
 };
 
+const isReliableImageUrl = (value) => {
+  const normalized = String(value || '').trim();
+  return normalized.startsWith('http://') || normalized.startsWith('https://') || normalized.startsWith('data:');
+};
+
+const resolveProductImage = (product, fallback) => {
+  if (fallback?.image) {
+    return fallback.image;
+  }
+
+  if (isReliableImageUrl(product?.image_url)) {
+    return product.image_url;
+  }
+
+  return defaultProductImage;
+};
+
 const mapProduct = (product) => {
   const local = findLocalProduct(product);
   const fallback = local ?? {};
   const code = inferProductCode(product) ?? fallback.id;
+  const image = resolveProductImage(product, fallback);
+  const imageFallback = fallback.image ?? defaultProductImage;
 
   return {
     id: product?.id ?? fallback.id,
@@ -52,7 +72,8 @@ const mapProduct = (product) => {
     description: product?.description ?? fallback.description ?? '',
     price: product?.price ?? fallback.price ?? 0,
     stock: product?.stock ?? fallback.stock ?? 0,
-    image: product?.image_url || fallback.image,
+    image,
+    imageFallback,
     detail: fallback.detail,
   };
 };

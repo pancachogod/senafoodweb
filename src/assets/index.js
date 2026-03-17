@@ -11,6 +11,7 @@ import clients from './CLIENTES.png';
 import profile from './PERFIL.png';
 import banner from './banner.png';
 import riceBowl from './arroz.png';
+import defaultProductImage from './arroz con pollo.png';
 import juiceHome from './jugohome.png';
 import saladHome from './ensalada home.png';
 import ingredientsFresh from './INGREDIENTES FRESCOS.png';
@@ -44,6 +45,7 @@ export {
   profile,
   banner,
   riceBowl,
+  defaultProductImage,
   juiceHome,
   saladHome,
   ingredientsFresh,

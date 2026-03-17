@@ -506,6 +506,11 @@ export default function Home() {
                         className="h-[150px] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                         src={activeImage}
                         alt={product.name}
+                        onError={(event) => {
+                          if (event.currentTarget.src !== product.imageFallback) {
+                            event.currentTarget.src = product.imageFallback;
+                          }
+                        }}
                       />
                     </Link>
                     <div className="px-4 py-4">

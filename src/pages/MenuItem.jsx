@@ -262,6 +262,11 @@ export default function MenuItem() {
                       className="h-[300px] w-full object-cover sm:h-[340px]"
                       src={selectedImage}
                       alt={product?.name}
+                      onError={(event) => {
+                        if (event.currentTarget.src !== product?.imageFallback) {
+                          event.currentTarget.src = product?.imageFallback || product?.image;
+                        }
+                      }}
                     />
                   ) : null}
                 </div>
@@ -278,7 +283,16 @@ export default function MenuItem() {
                         onClick={() => setSelectedImage(image)}
                         aria-label={`Vista ${index + 1} de ${product?.name}`}
                       >
-                        <img className="h-[70px] w-[95px] object-cover" src={image} alt="" />
+                        <img
+                          className="h-[70px] w-[95px] object-cover"
+                          src={image}
+                          alt=""
+                          onError={(event) => {
+                            if (event.currentTarget.src !== product?.imageFallback) {
+                              event.currentTarget.src = product?.imageFallback || product?.image;
+                            }
+                          }}
+                        />
                       </button>
                     );
                   })}
