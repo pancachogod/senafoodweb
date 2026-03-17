@@ -17,6 +17,8 @@ pip install -r requirements.txt
 copy .env.example .env
 ```
 
+The backend reads `backend/.env` automatically on startup.
+
 ## PostgreSQL with Docker
 
 From the repo root:
@@ -55,6 +57,7 @@ uvicorn app.main:app --reload
 
 - Set `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS` in Railway variables.
 - For one-time admin bootstrap, also set `ADMIN_BOOTSTRAP_KEY` with a long random value.
+- For the current production URL and desktop client setup, see `backend/DESKTOP_INTEGRATION.md`.
 - Start command:
 
 ```bash
@@ -85,6 +88,7 @@ Request body:
 
 - If the user exists, the endpoint promotes it to `admin` and updates the password only when `password` is sent.
 - If the user does not exist, it creates the account as verified admin. In that case `name`, `phone`, `document`, and `password` are required.
+- If the route responds with `403 Admin bootstrap deshabilitado.`, add `ADMIN_BOOTSTRAP_KEY` to `backend/.env` locally or to your deploy environment variables.
 - Remove or rotate `ADMIN_BOOTSTRAP_KEY` after using it.
 
 ## Token validation

@@ -1,5 +1,33 @@
 import os
 from functools import lru_cache
+from pathlib import Path
+
+
+ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
+
+
+def load_env_file() -> None:
+    if not ENV_FILE.exists():
+        return
+
+    for raw_line in ENV_FILE.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        cleaned_value = value.strip()
+        if (
+            len(cleaned_value) >= 2
+            and cleaned_value[0] == cleaned_value[-1]
+            and cleaned_value[0] in {'"', "'"}
+        ):
+            cleaned_value = cleaned_value[1:-1]
+
+        os.environ.setdefault(key.strip(), cleaned_value)
+
+
+load_env_file()
 
 
 def normalize_database_url(url: str) -> str:
