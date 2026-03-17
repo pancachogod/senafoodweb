@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import CartDrawer from '../components/CartDrawer.jsx';
 import HeaderNavDrawer from '../components/HeaderNavDrawer.jsx';
+import { buildApiUrl } from '../api/client.js';
 import { cart, logo, profile, qr } from '../assets/index.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useOrders } from '../context/OrdersContext.jsx';
@@ -76,7 +77,7 @@ export default function Orders() {
   const location = useLocation();
   const { orders, isLoading, error } = useOrders();
   const { items, itemCount, total, increaseItem, decreaseItem, removeItem } = useCart();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, logout, token } = useAuth();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [openOrderId, setOpenOrderId] = useState(null);
   const [copiedToken, setCopiedToken] = useState(null);
@@ -121,9 +122,37 @@ export default function Orders() {
     }
   };
 
-  const handleViewProof = (proof) => {
-    if (!proof?.dataUrl) return;
-    window.open(proof.dataUrl, '_blank', 'noopener,noreferrer');
+  const handleViewProof = async (proof) => {
+    if (!proof?.url || !token) return;
+
+    const proofWindow = window.open('', '_blank', 'noopener,noreferrer');
+
+    try {
+      const response = await fetch(buildApiUrl(proof.url), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('No se pudo cargar el comprobante.');
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      if (proofWindow) {
+        proofWindow.location.href = objectUrl;
+      } else {
+        window.open(objectUrl, '_blank', 'noopener,noreferrer');
+      }
+
+      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+    } catch (error) {
+      if (proofWindow) {
+        proofWindow.close();
+      }
+    }
   };
 
   const buildReceiptFileName = (order) => {
@@ -286,6 +315,9 @@ export default function Orders() {
   const getStatusStyles = (status) => {
     if (status === 'Cancelado') {
       return 'bg-[#ffe5e5] text-[#d93838]';
+    }
+    if (status === 'Entregado') {
+      return 'bg-[#e7f7eb] text-[#24884b]';
     }
     return 'bg-[#fff1df] text-[#e56a1a]';
   };
@@ -581,7 +613,7 @@ export default function Orders() {
                                       </span>
                                     ) : null}
                                   </div>
-                                  {order.proof?.dataUrl ? (
+                                  {order.proof?.url ? (
                                     <button
                                       className="flex h-7 w-7 items-center justify-center rounded-[8px] border border-[#eadfd5] bg-white"
                                       type="button"

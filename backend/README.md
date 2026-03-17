@@ -99,4 +99,6 @@ Desktop app should call `POST /tokens/validate` with a JSON body:
 { "token": "ABC-12-34" }
 ```
 
-If valid and unused, the order status becomes `Entregado`.
+If valid and unused, the order status becomes `Entregado` and the latest payment status is updated as well.
+
+To display a saved payment proof from desktop, read `latest_payment.proof_url` from `GET /orders?all=true` and request that path with the same bearer token used by the admin session.

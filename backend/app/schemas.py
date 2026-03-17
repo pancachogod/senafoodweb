@@ -158,6 +158,21 @@ class OrderCreate(BaseModel):
     payment_method: str | None = "Nequi"
 
 
+class PaymentSummaryOut(BaseModel):
+    id: int
+    order_id: int
+    method: str
+    amount: int
+    status: str
+    proof_filename: str | None = None
+    proof_mime: str | None = None
+    has_proof: bool = False
+    proof_url: str | None = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class OrderOut(BaseModel):
     id: int
     status: str
@@ -168,6 +183,7 @@ class OrderOut(BaseModel):
     updated_at: datetime
     items: list[OrderItemOut]
     user: UserPublic
+    latest_payment: PaymentSummaryOut | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -176,15 +192,8 @@ class OrderUpdate(BaseModel):
     status: str
 
 
-class PaymentOut(BaseModel):
-    id: int
-    order_id: int
-    method: str
-    amount: int
-    status: str
-    created_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
+class PaymentOut(PaymentSummaryOut):
+    pass
 
 
 class TokenValidationRequest(BaseModel):

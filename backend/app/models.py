@@ -117,6 +117,19 @@ class Order(Base):
         back_populates="order", uselist=False, cascade="all, delete-orphan"
     )
 
+    @property
+    def latest_payment(self) -> "Payment | None":
+        if not self.payments:
+            return None
+        return max(
+            self.payments,
+            key=lambda payment: (
+                payment.created_at is not None,
+                payment.created_at,
+                payment.id or 0,
+            ),
+        )
+
 
 class OrderItem(Base):
     __tablename__ = "order_items"
@@ -152,6 +165,16 @@ class Payment(Base):
     )
 
     order: Mapped["Order"] = relationship(back_populates="payments")
+
+    @property
+    def has_proof(self) -> bool:
+        return bool(self.proof_filename or self.proof_mime)
+
+    @property
+    def proof_url(self) -> str | None:
+        if not self.has_proof or self.id is None:
+            return None
+        return f"/payments/{self.id}/proof"
 
 
 class TokenValidator(Base):

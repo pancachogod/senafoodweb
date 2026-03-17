@@ -32,6 +32,9 @@ def validate_token(
         raise HTTPException(status_code=404, detail="Order not found")
 
     order.status = "Entregado"
+    latest_payment = order.latest_payment
+    if latest_payment and latest_payment.status != "Entregado":
+        latest_payment.status = "Entregado"
     db.commit()
     db.refresh(order)
 

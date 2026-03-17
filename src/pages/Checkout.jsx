@@ -19,7 +19,7 @@ const formatCop = (value) => {
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, itemCount, total, clearCart } = useCart();
-  const { createOrder } = useOrders();
+  const { createOrder, refreshOrders } = useOrders();
   const { token, user, isAuthenticated, logout } = useAuth();
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isConfirmWarningOpen, setIsConfirmWarningOpen] = useState(false);
@@ -118,6 +118,8 @@ export default function Checkout() {
         status: 'Pendiente',
         proof: paymentProof.file,
       });
+
+      await refreshOrders();
 
       clearCart();
       setPendingOrderId(null);

@@ -30,9 +30,14 @@ API_BASE_URL=https://senafoodweb-production.up.railway.app
 ## Useful endpoints
 
 - Health check: `GET /health`
+- List all orders as admin: `GET /orders?all=true`
 - Create or promote admin: `POST /auth/admin/bootstrap`
 - Login: `POST /auth/login`
 - Validate delivery token: `POST /tokens/validate`
+- View payment proof image: `GET /payments/{payment_id}/proof`
+
+`GET /orders?all=true` now includes `latest_payment`, and when a proof exists it exposes a relative `proof_url` like `/payments/15/proof`.
+Use the backend base URL plus that path and send the same bearer token from the admin login.
 
 ## Admin bootstrap request
 
@@ -60,3 +65,5 @@ Body:
 ```json
 { "token": "ABC-12-34" }
 ```
+
+When the token is validated, the order status changes to `Entregado` and the latest payment status is updated too.

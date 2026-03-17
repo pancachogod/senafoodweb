@@ -1,6 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
-const buildUrl = (path) => {
+export const buildApiUrl = (path) => {
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
@@ -30,7 +30,7 @@ export async function apiRequest(path, options = {}) {
     requestHeaders['Content-Type'] = 'application/json';
   }
 
-  const response = await fetch(buildUrl(path), {
+  const response = await fetch(buildApiUrl(path), {
     method,
     headers: requestHeaders,
     body: body
