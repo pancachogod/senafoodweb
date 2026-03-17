@@ -2,12 +2,28 @@ import { createContext, useContext, useMemo, useState } from 'react';
 
 const CartContext = createContext(null);
 
+const normalizeStock = (stock) => {
+  if (!Number.isFinite(stock)) {
+    return null;
+  }
+  return Math.max(0, Number(stock));
+};
+
+const clampQuantity = (quantity, stock) => {
+  const safeQuantity = Number.isFinite(quantity) && quantity > 0 ? Math.floor(quantity) : 1;
+  if (stock === null) {
+    return safeQuantity;
+  }
+  return Math.max(0, Math.min(safeQuantity, stock));
+};
+
 const normalizeItem = (item) => ({
   id: item.id,
   name: item.name,
   description: item.description ?? '',
   price: item.price,
   image: item.image,
+  stock: normalizeStock(item.stock),
 });
 
 export function CartProvider({ children }) {
@@ -16,14 +32,16 @@ export function CartProvider({ children }) {
   const addItem = (item, quantity = 1) => {
     if (!item) return;
     const payload = normalizeItem(item);
-    const safeQuantity = Number.isFinite(quantity) && quantity > 0 ? quantity : 1;
+    const safeQuantity = clampQuantity(quantity, payload.stock);
+    if (safeQuantity <= 0) return;
 
     setItems((prev) => {
       const existing = prev.find((entry) => entry.id === payload.id);
       if (existing) {
+        const nextQuantity = clampQuantity(existing.quantity + safeQuantity, payload.stock);
         return prev.map((entry) =>
           entry.id === payload.id
-            ? { ...entry, quantity: entry.quantity + safeQuantity }
+            ? { ...entry, ...payload, quantity: nextQuantity }
             : entry
         );
       }
@@ -33,7 +51,11 @@ export function CartProvider({ children }) {
 
   const increaseItem = (id) => {
     setItems((prev) =>
-      prev.map((entry) => (entry.id === id ? { ...entry, quantity: entry.quantity + 1 } : entry))
+      prev.map((entry) => {
+        if (entry.id !== id) return entry;
+        const nextQuantity = clampQuantity(entry.quantity + 1, entry.stock);
+        return { ...entry, quantity: nextQuantity || entry.quantity };
+      })
     );
   };
 

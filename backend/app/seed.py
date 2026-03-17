@@ -11,6 +11,7 @@ SEED_PRODUCTS = [
         "description": "Filete arroz, pollo a la plancha y ensalada fresca",
         "price": 9600,
         "image_url": None,
+        "stock": 12,
         "is_active": True,
     },
     {
@@ -19,6 +20,7 @@ SEED_PRODUCTS = [
         "description": "Filete arroz, tilapia y ensalada fresca",
         "price": 9500,
         "image_url": None,
+        "stock": 10,
         "is_active": True,
     },
 ]

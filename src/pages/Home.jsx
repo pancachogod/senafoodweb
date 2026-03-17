@@ -44,6 +44,26 @@ const getProductImages = (product) => {
   return product?.image ? [product.image] : [];
 };
 
+const getStockLabel = (stock) => {
+  if (!Number.isFinite(stock) || stock < 0) {
+    return 'Stock no disponible';
+  }
+  if (stock === 0) {
+    return 'Agotado';
+  }
+  if (stock === 1) {
+    return '1 disponible';
+  }
+  return `${stock} disponibles`;
+};
+
+const getStockStyles = (stock) => {
+  if (!Number.isFinite(stock) || stock <= 0) {
+    return 'bg-[#fff1f1] text-[#d93838]';
+  }
+  return 'bg-[#edf8ef] text-[#24884b]';
+};
+
 export default function Home() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [openFaqIndex, setOpenFaqIndex] = useState(0);
@@ -120,6 +140,9 @@ export default function Home() {
   };
 
   const handleAddToCart = (product) => {
+    if (!product || !Number.isFinite(product.stock) || product.stock <= 0) {
+      return;
+    }
     addItem(product, 1);
     setIsCartOpen(true);
   };
@@ -463,50 +486,58 @@ export default function Home() {
               </p>
             </div>
             <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2">
-              {products.map((product, index) => (
-                <article
-                  className="group overflow-hidden rounded-[18px] bg-white shadow-[0_6px_14px_rgba(0,0,0,0.06)] transition-transform duration-300 hover:-translate-y-1 animate-reveal"
-                  key={product.id}
-                  style={{ animationDelay: `${index * 90}ms` }}
-                >
-                  <Link to={`/menu/${product.id}`} aria-label={`Ver ${product.name}`}>
-                    {(() => {
-                      const images = getProductImages(product);
-                      const key = getProductKey(product);
-                      const activeIndex = Number.isFinite(carouselIndexMap[key])
-                        ? carouselIndexMap[key]
-                        : 0;
-                      const activeImage = images[activeIndex] ?? product.image;
-                      return (
-                        <img
-                          className="h-[150px] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                          src={activeImage}
-                          alt={product.name}
-                        />
-                      );
-                    })()}
-                  </Link>
-                  <div className="px-4 py-4">
-                    <h3 className="text-[14px] text-title">
-                      <Link className="transition hover:text-orange" to={`/menu/${product.id}`}>
-                        {product.name}
-                      </Link>
-                    </h3>
-                    <p className="mt-1 text-[11px] text-muted">{product.description}</p>
-                    <div className="mt-3 flex items-center justify-between text-[12px] text-[#e75a1a]">
-                      <span>{formatCop(product.price)}</span>
-                      <button
-                        className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#f0e4da] bg-white transition hover:bg-[#fff4eb]"
-                        type="button"
-                        onClick={() => handleAddToCart(product)}
-                        aria-label="Agregar al carrito"
-                      >
-                        <img className="h-4 w-4" src={cartMenu} alt="Agregar" />
-                      </button>
+              {products.map((product, index) => {
+                const isOutOfStock = Number.isFinite(product.stock) && product.stock <= 0;
+                const images = getProductImages(product);
+                const key = getProductKey(product);
+                const activeIndex = Number.isFinite(carouselIndexMap[key])
+                  ? carouselIndexMap[key]
+                  : 0;
+                const activeImage = images[activeIndex] ?? product.image;
+
+                return (
+                  <article
+                    className="group overflow-hidden rounded-[18px] bg-white shadow-[0_6px_14px_rgba(0,0,0,0.06)] transition-transform duration-300 hover:-translate-y-1 animate-reveal"
+                    key={product.id}
+                    style={{ animationDelay: `${index * 90}ms` }}
+                  >
+                    <Link to={`/menu/${product.id}`} aria-label={`Ver ${product.name}`}>
+                      <img
+                        className="h-[150px] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                        src={activeImage}
+                        alt={product.name}
+                      />
+                    </Link>
+                    <div className="px-4 py-4">
+                      <h3 className="text-[14px] text-title">
+                        <Link className="transition hover:text-orange" to={`/menu/${product.id}`}>
+                          {product.name}
+                        </Link>
+                      </h3>
+                      <p className="mt-1 text-[11px] text-muted">{product.description}</p>
+                      <div className="mt-3 flex items-center justify-between gap-3">
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${getStockStyles(product.stock)}`}
+                        >
+                          {getStockLabel(product.stock)}
+                        </span>
+                      </div>
+                      <div className="mt-3 flex items-center justify-between text-[12px] text-[#e75a1a]">
+                        <span>{formatCop(product.price)}</span>
+                        <button
+                          className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#f0e4da] bg-white transition hover:bg-[#fff4eb] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-white"
+                          type="button"
+                          onClick={() => handleAddToCart(product)}
+                          aria-label="Agregar al carrito"
+                          disabled={isOutOfStock}
+                        >
+                          <img className="h-4 w-4" src={cartMenu} alt="Agregar" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                );
+              })}
             </div>
             {productsError ? (
               <p className="mt-4 text-center text-[11px] text-[#e24c3b]">{productsError}</p>

@@ -13,6 +13,7 @@ const menuItems = [
     name: 'Almuerzo Especial Pollo',
     description: 'Filete arroz, pollo a la plancha y ensalada fresca',
     price: 9600,
+    stock: 12,
     image: lunchChicken,
     detail: {
       subtitle: 'Pollo a la plancha en su jugo',
@@ -24,6 +25,7 @@ const menuItems = [
     name: 'Almuerzo Especial Pescado',
     description: 'Filete arroz, tilapia y ensalada fresca',
     price: 9500,
+    stock: 10,
     image: lunchFish,
     detail: {
       subtitle: 'Tilapia al horno con ensalada',

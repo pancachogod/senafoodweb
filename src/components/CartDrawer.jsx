@@ -149,10 +149,11 @@ export default function CartDrawer({
                         </button>
                         <span className="text-[11px] font-semibold text-title">{item.quantity}</span>
                         <button
-                          className="flex h-6 w-6 items-center justify-center rounded-full border border-[#e7d8cc] bg-white text-[12px] text-title"
+                          className="flex h-6 w-6 items-center justify-center rounded-full border border-[#e7d8cc] bg-white text-[12px] text-title disabled:cursor-not-allowed disabled:opacity-40"
                           type="button"
                           onClick={() => onIncrease(item.id)}
                           aria-label={`Aumentar ${item.name}`}
+                          disabled={item.stock !== null && item.quantity >= item.stock}
                         >
                           +
                         </button>
@@ -160,6 +161,13 @@ export default function CartDrawer({
                       <span className="text-[11px] font-semibold text-title">
                         {formatCop(item.price * item.quantity)}
                       </span>
+                    </div>
+                    <div className="mt-2 text-[10px] text-muted">
+                      {item.stock === null
+                        ? 'Stock no disponible.'
+                        : item.stock > 0
+                          ? `Disponibles: ${item.stock}`
+                          : 'Agotado'}
                     </div>
                   </div>
                 </div>

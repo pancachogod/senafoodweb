@@ -16,6 +16,26 @@ const formatCop = (value) => {
   }).format(value);
 };
 
+const getStockLabel = (stock) => {
+  if (!Number.isFinite(stock) || stock < 0) {
+    return 'Stock no disponible';
+  }
+  if (stock === 0) {
+    return 'Agotado';
+  }
+  if (stock === 1) {
+    return '1 disponible';
+  }
+  return `${stock} disponibles`;
+};
+
+const getStockStyles = (stock) => {
+  if (!Number.isFinite(stock) || stock <= 0) {
+    return 'bg-[#fff1f1] text-[#d93838]';
+  }
+  return 'bg-[#edf8ef] text-[#24884b]';
+};
+
 export default function MenuItem() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -36,11 +56,21 @@ export default function MenuItem() {
   const quantityRowRef = useRef(null);
   const { items, addItem, increaseItem, decreaseItem, removeItem, itemCount, total } = useCart();
   const { logout } = useAuth();
+  const availableStock = Number.isFinite(product?.stock) ? product.stock : 0;
+  const isOutOfStock = availableStock <= 0;
 
   useEffect(() => {
     setSelectedImage(gallery[0]);
     setQuantity(1);
   }, [gallery]);
+
+  useEffect(() => {
+    if (isOutOfStock) {
+      setQuantity(1);
+      return;
+    }
+    setQuantity((prev) => Math.min(prev, availableStock));
+  }, [availableStock, isOutOfStock]);
 
   useEffect(() => {
     if (gallery.length <= 1) return;
@@ -94,6 +124,7 @@ export default function MenuItem() {
   };
 
   const handleBuy = () => {
+    if (!product || isOutOfStock) return;
     addItem(product, quantity);
     setIsCartOpen(true);
   };
@@ -252,6 +283,13 @@ export default function MenuItem() {
                   {product?.name}
                 </h1>
                 <p className="mt-1 text-[12px] text-muted">{subtitle}</p>
+                <div className="mt-3">
+                  <span
+                    className={`rounded-full px-3 py-1 text-[10px] font-semibold ${getStockStyles(product?.stock)}`}
+                  >
+                    {getStockLabel(product?.stock)}
+                  </span>
+                </div>
                 <p className="mt-3 text-[16px] font-semibold text-orange">
                   {formatCop(totalPrice)} COP
                 </p>
@@ -265,19 +303,21 @@ export default function MenuItem() {
                   <span className="text-[11px] text-muted">Cantidad</span>
                   <div className="mt-2 inline-flex items-center gap-4" ref={quantityRowRef}>
                     <button
-                      className="flex h-7 w-7 items-center justify-center rounded-full border border-[#e3d6cb] bg-white text-[14px] text-title shadow-[0_4px_8px_rgba(0,0,0,0.08)]"
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-[#e3d6cb] bg-white text-[14px] text-title shadow-[0_4px_8px_rgba(0,0,0,0.08)] disabled:cursor-not-allowed disabled:opacity-40"
                       type="button"
                       onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
                       aria-label="Disminuir cantidad"
+                      disabled={isOutOfStock}
                     >
                       -
                     </button>
                     <span className="text-[12px] font-semibold text-title">{quantity}</span>
                     <button
-                      className="flex h-7 w-7 items-center justify-center rounded-full border border-[#e3d6cb] bg-white text-[14px] text-title shadow-[0_4px_8px_rgba(0,0,0,0.08)]"
+                      className="flex h-7 w-7 items-center justify-center rounded-full border border-[#e3d6cb] bg-white text-[14px] text-title shadow-[0_4px_8px_rgba(0,0,0,0.08)] disabled:cursor-not-allowed disabled:opacity-40"
                       type="button"
-                      onClick={() => setQuantity((prev) => prev + 1)}
+                      onClick={() => setQuantity((prev) => Math.min(availableStock, prev + 1))}
                       aria-label="Aumentar cantidad"
+                      disabled={isOutOfStock || quantity >= availableStock}
                     >
                       +
                     </button>
@@ -285,12 +325,13 @@ export default function MenuItem() {
                 </div>
 
                 <button
-                  className="mt-5 rounded-full bg-orange py-2.5 text-[12px] font-semibold text-white shadow-[0_8px_16px_rgba(242,106,29,0.24)]"
+                  className="mt-5 rounded-full bg-orange py-2.5 text-[12px] font-semibold text-white shadow-[0_8px_16px_rgba(242,106,29,0.24)] disabled:cursor-not-allowed disabled:bg-[#d7d0ca] disabled:text-[#7a6f66] disabled:shadow-none"
                   type="button"
                   onClick={handleBuy}
                   style={buyButtonWidth ? { width: buyButtonWidth } : undefined}
+                  disabled={isOutOfStock}
                 >
-                  Comprar
+                  {isOutOfStock ? 'Agotado' : 'Comprar'}
                 </button>
 
                 <ul className="mt-6 space-y-3">

@@ -13,6 +13,7 @@ const mapProduct = (product) => {
     name: product?.name ?? fallback.name,
     description: product?.description ?? fallback.description ?? '',
     price: product?.price ?? fallback.price ?? 0,
+    stock: product?.stock ?? fallback.stock ?? 0,
     image: product?.image_url || fallback.image,
     detail: fallback.detail,
   };

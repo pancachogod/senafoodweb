@@ -82,6 +82,7 @@ class Product(Base):
     price: Mapped[int] = mapped_column(Integer)
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
     code: Mapped[str | None] = mapped_column(String(80), unique=True, nullable=True)
+    stock: Mapped[int] = mapped_column(Integer, default=0)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

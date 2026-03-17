@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -13,7 +15,7 @@ router = APIRouter(prefix="/orders", tags=["orders"])
 
 ORDER_LOAD_OPTIONS = (
     selectinload(Order.user),
-    selectinload(Order.items),
+    selectinload(Order.items).selectinload(OrderItem.product),
     selectinload(Order.payments).load_only(
         Payment.id,
         Payment.order_id,
@@ -35,20 +37,41 @@ def get_order_with_relations(db: Session, order_id: int) -> Order | None:
     return db.scalar(build_order_query().where(Order.id == order_id))
 
 
-def _build_item_data(items: list, db: Session) -> tuple[list[dict], int]:
+def _build_item_data(items: list, db: Session) -> tuple[list[dict], int, list[tuple[Product, int]]]:
     if not items:
         raise HTTPException(status_code=400, detail="Order must have items")
 
     built: list[dict] = []
     total = 0
+    locked_products: dict[int, Product] = {}
+    reserved_quantities: dict[int, int] = defaultdict(int)
+
     for item in items:
         if item.quantity <= 0:
             raise HTTPException(status_code=400, detail="Invalid quantity")
 
         if item.product_id:
-            product = db.get(Product, item.product_id)
+            product = locked_products.get(item.product_id)
+            if product is None:
+                product = db.scalar(
+                    select(Product)
+                    .where(Product.id == item.product_id)
+                    .with_for_update()
+                )
+                if product is not None:
+                    locked_products[item.product_id] = product
             if not product or not product.is_active:
                 raise HTTPException(status_code=400, detail="Invalid product")
+            remaining_stock = product.stock - reserved_quantities[item.product_id]
+            if remaining_stock < item.quantity:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=(
+                        f"Stock insuficiente para {product.name}. "
+                        f"Disponibles: {max(remaining_stock, 0)}."
+                    ),
+                )
+            reserved_quantities[item.product_id] += item.quantity
             name = product.name
             description = product.description
             price = product.price
@@ -76,7 +99,19 @@ def _build_item_data(items: list, db: Session) -> tuple[list[dict], int]:
             }
         )
 
-    return built, total
+    stock_reservations = [
+        (locked_products[product_id], quantity)
+        for product_id, quantity in reserved_quantities.items()
+    ]
+
+    return built, total, stock_reservations
+
+
+def restore_product_stock(order: Order) -> None:
+    for item in order.items:
+        if item.product is None:
+            continue
+        item.product.stock += item.quantity
 
 
 @router.post("", response_model=OrderOut, status_code=status.HTTP_201_CREATED)
@@ -85,9 +120,11 @@ def create_order(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> OrderOut:
-    items_data, total = _build_item_data(payload.items, db)
-
     for attempt in range(5):
+        items_data, total, stock_reservations = _build_item_data(payload.items, db)
+        for product, quantity in stock_reservations:
+            product.stock -= quantity
+
         token = generate_token()
         order = Order(
             user_id=current_user.id,
@@ -168,6 +205,14 @@ def update_order(
             raise HTTPException(status_code=403, detail="Only cancel allowed")
         if order.status == "Entregado":
             raise HTTPException(status_code=400, detail="Order already delivered")
+
+    if order.status == "Cancelado" and payload.status != "Cancelado":
+        raise HTTPException(status_code=400, detail="Cancelled order cannot be reopened")
+    if order.status == "Entregado" and payload.status != "Entregado":
+        raise HTTPException(status_code=400, detail="Delivered order cannot change status")
+
+    if payload.status == "Cancelado" and order.status != "Cancelado":
+        restore_product_stock(order)
 
     order.status = payload.status
     db.commit()
