@@ -23,6 +23,9 @@ import lunchChicken from './(Almuerzo Especial Pollo).png';
 import plateSalad from './Image (Ensalada).png';
 import plateRice from './Image (Arroz Blanco).png';
 import plateLemonade from './Image (Limonada).png';
+import menuOne from './imagen-senaFood/manu2?url';
+import menuTwo from './imagen-senaFood/menu2?url';
+import menuThree from './imagen-senaFood/menu3?url';
 import stepOne from './paso 1.png';
 import stepTwo from './paso 2.png';
 import stepThree from './PASO 3.png';
@@ -53,6 +56,9 @@ export {
   plateSalad,
   plateRice,
   plateLemonade,
+  menuOne,
+  menuTwo,
+  menuThree,
   stepOne,
   stepTwo,
   stepThree,

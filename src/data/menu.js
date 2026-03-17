@@ -1,8 +1,9 @@
 import {
   lunchChicken,
   lunchFish,
-  plateLemonade,
-  plateRice,
+  menuOne,
+  menuThree,
+  menuTwo,
   plateSalad,
 } from '../assets/index.js';
 
@@ -15,7 +16,7 @@ const menuItems = [
     image: lunchChicken,
     detail: {
       subtitle: 'Pollo a la plancha en su jugo',
-      gallery: [lunchChicken, plateRice, plateLemonade],
+      gallery: [lunchChicken, menuOne, menuTwo],
     },
   },
   {
@@ -26,7 +27,7 @@ const menuItems = [
     image: lunchFish,
     detail: {
       subtitle: 'Tilapia al horno con ensalada',
-      gallery: [lunchFish, plateSalad, plateLemonade],
+      gallery: [lunchFish, menuThree, plateSalad],
     },
   },
 ];

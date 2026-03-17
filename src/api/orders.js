@@ -6,10 +6,6 @@ const mapPayment = (payment) => ({
   method: payment.method,
   amount: payment.amount,
   status: payment.status,
-  proofFilename: payment.proof_filename ?? payment.proofFilename ?? null,
-  proofMime: payment.proof_mime ?? payment.proofMime ?? null,
-  hasProof: Boolean(payment.has_proof ?? payment.hasProof ?? payment.proof_url ?? payment.proofUrl),
-  proofUrl: payment.proof_url ?? payment.proofUrl ?? null,
   createdAt: payment.created_at ?? payment.createdAt,
 });
 
@@ -39,13 +35,6 @@ const mapOrder = (order) => {
     subtitle: order.subtitle ?? order.items?.[0]?.name,
     user: order.user,
     latestPayment,
-    proof: latestPayment?.proofUrl
-      ? {
-          url: latestPayment.proofUrl,
-          filename: latestPayment.proofFilename,
-          mime: latestPayment.proofMime,
-        }
-      : null,
   };
 };
 

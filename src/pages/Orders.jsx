@@ -3,7 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import CartDrawer from '../components/CartDrawer.jsx';
 import HeaderNavDrawer from '../components/HeaderNavDrawer.jsx';
-import { buildApiUrl } from '../api/client.js';
 import { cart, logo, profile, qr } from '../assets/index.js';
 import { useCart } from '../context/CartContext.jsx';
 import { useOrders } from '../context/OrdersContext.jsx';
@@ -77,7 +76,7 @@ export default function Orders() {
   const location = useLocation();
   const { orders, isLoading, error } = useOrders();
   const { items, itemCount, total, increaseItem, decreaseItem, removeItem } = useCart();
-  const { isAuthenticated, user, logout, token } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [openOrderId, setOpenOrderId] = useState(null);
   const [copiedToken, setCopiedToken] = useState(null);
@@ -119,39 +118,6 @@ export default function Orders() {
       }, 1500);
     } catch (error) {
       return;
-    }
-  };
-
-  const handleViewProof = async (proof) => {
-    if (!proof?.url || !token) return;
-
-    const proofWindow = window.open('', '_blank', 'noopener,noreferrer');
-
-    try {
-      const response = await fetch(buildApiUrl(proof.url), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('No se pudo cargar el comprobante.');
-      }
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-
-      if (proofWindow) {
-        proofWindow.location.href = objectUrl;
-      } else {
-        window.open(objectUrl, '_blank', 'noopener,noreferrer');
-      }
-
-      window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
-    } catch (error) {
-      if (proofWindow) {
-        proofWindow.close();
-      }
     }
   };
 
@@ -613,23 +579,6 @@ export default function Orders() {
                                       </span>
                                     ) : null}
                                   </div>
-                                  {order.proof?.url ? (
-                                    <button
-                                      className="flex h-7 w-7 items-center justify-center rounded-[8px] border border-[#eadfd5] bg-white"
-                                      type="button"
-                                      aria-label="Ver comprobante"
-                                      onClick={() => handleViewProof(order.proof)}
-                                    >
-                                      <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none">
-                                        <path
-                                          d="M2.5 10s3-5 7.5-5 7.5 5 7.5 5-3 5-7.5-5-7.5-5Z"
-                                          stroke="currentColor"
-                                          strokeWidth="1.4"
-                                        />
-                                        <circle cx="10" cy="10" r="2.5" stroke="currentColor" strokeWidth="1.4" />
-                                      </svg>
-                                    </button>
-                                  ) : null}
                                 </div>
                               </div>
                               <div className="flex items-center justify-between border-t border-[#f0e1d6] pt-3">
