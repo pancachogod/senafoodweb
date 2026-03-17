@@ -1,6 +1,7 @@
+import secrets
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Header, Response, status
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -11,6 +12,8 @@ from ..deps import get_current_user
 from ..email import send_account_verification_email, send_password_reset_email
 from ..models import EmailVerificationToken, PasswordResetToken, User
 from ..schemas import (
+    AdminBootstrapRequest,
+    AdminBootstrapResponse,
     EmailVerificationConfirm,
     EmailVerificationResendRequest,
     EmailVerificationResponse,
@@ -39,6 +42,29 @@ from ..utils import generate_password_reset_token, hash_token
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+def require_admin_bootstrap_key(
+    x_admin_bootstrap_key: str | None = Header(
+        default=None,
+        alias="X-Admin-Bootstrap-Key",
+    ),
+) -> None:
+    settings = get_settings()
+    expected_key = settings.admin_bootstrap_key
+    if not expected_key:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin bootstrap deshabilitado.",
+        )
+    if not x_admin_bootstrap_key or not secrets.compare_digest(
+        x_admin_bootstrap_key,
+        expected_key,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin bootstrap key invalida.",
+        )
+
+
 def build_verification_token(settings, user_id: int) -> tuple[str, EmailVerificationToken, str]:
     raw_token, token_hash = generate_password_reset_token()
     expire_minutes = settings.account_verification_expire_minutes
@@ -53,6 +79,131 @@ def build_verification_token(settings, user_id: int) -> tuple[str, EmailVerifica
     )
     verify_link = f"{settings.frontend_url}/verify?token={raw_token}"
     return raw_token, token_entry, verify_link
+
+
+@router.post("/admin/bootstrap", response_model=AdminBootstrapResponse)
+def bootstrap_admin_user(
+    payload: AdminBootstrapRequest,
+    response: Response,
+    db: Session = Depends(get_db),
+    _bootstrap: None = Depends(require_admin_bootstrap_key),
+) -> AdminBootstrapResponse:
+    email = str(payload.email).strip()
+    name = payload.name.strip() if payload.name is not None else None
+    phone = payload.phone.strip() if payload.phone is not None else None
+    document = payload.document.strip() if payload.document is not None else None
+
+    for label, raw_value, normalized_value in (
+        ("name", payload.name, name),
+        ("phone", payload.phone, phone),
+        ("document", payload.document, document),
+    ):
+        if raw_value is not None and not normalized_value:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"El campo {label} no puede estar vacio.",
+            )
+
+    user = db.scalar(select(User).where(User.email == email))
+    created = user is None
+
+    if created:
+        missing_fields = [
+            label
+            for label, value in (
+                ("name", name),
+                ("phone", phone),
+                ("document", document),
+                ("password", payload.password),
+            )
+            if not value
+        ]
+        if missing_fields:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=(
+                    "Faltan campos para crear el admin: "
+                    f"{', '.join(missing_fields)}."
+                ),
+            )
+        if not is_valid_password(payload.password or ""):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="La contrasena debe tener al menos 6 caracteres y una mayuscula.",
+            )
+        if db.scalar(select(User).where(User.phone == phone)):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="El telefono ya esta registrado.",
+            )
+        if db.scalar(select(User).where(User.document == document)):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="El documento ya esta registrado.",
+            )
+
+        user = User(
+            name=name or "",
+            email=email,
+            phone=phone or "",
+            document=document or "",
+            password_hash=get_password_hash(payload.password or ""),
+        )
+        db.add(user)
+        response.status_code = status.HTTP_201_CREATED
+    else:
+        if payload.password is not None:
+            if not is_valid_password(payload.password):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="La contrasena debe tener al menos 6 caracteres y una mayuscula.",
+                )
+            user.password_hash = get_password_hash(payload.password)
+        if name is not None:
+            user.name = name
+        if phone is not None and phone != user.phone:
+            existing_phone = db.scalar(
+                select(User).where(
+                    User.phone == phone,
+                    User.id != user.id,
+                )
+            )
+            if existing_phone:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="El telefono ya esta registrado.",
+                )
+            user.phone = phone
+        if document is not None and document != user.document:
+            existing_document = db.scalar(
+                select(User).where(
+                    User.document == document,
+                    User.id != user.id,
+                )
+            )
+            if existing_document:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="El documento ya esta registrado.",
+                )
+            user.document = document
+
+
+    user.role = "admin"
+    user.is_active = True
+    user.is_verified = True
+
+    try:
+        db.commit()
+        db.refresh(user)
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="El correo, telefono o documento ya esta registrado.",
+        ) from None
+
+    return AdminBootstrapResponse(created=created, user=user)
 
 
 @router.post("/register", response_model=RegisterResponse, status_code=status.HTTP_201_CREATED)

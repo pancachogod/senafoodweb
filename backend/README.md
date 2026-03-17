@@ -54,11 +54,38 @@ uvicorn app.main:app --reload
 ## Railway
 
 - Set `DATABASE_URL`, `JWT_SECRET`, `CORS_ORIGINS` in Railway variables.
+- For one-time admin bootstrap, also set `ADMIN_BOOTSTRAP_KEY` with a long random value.
 - Start command:
 
 ```bash
 uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
+
+## Bootstrap admin
+
+Use this endpoint to create or promote an admin user without direct database access:
+
+```http
+POST /auth/admin/bootstrap
+X-Admin-Bootstrap-Key: <ADMIN_BOOTSTRAP_KEY>
+Content-Type: application/json
+```
+
+Request body:
+
+```json
+{
+  "email": "carlos.admin@senafood.com",
+  "password": "Admin123",
+  "name": "Carlos Admin",
+  "phone": "3000000000",
+  "document": "1234567890"
+}
+```
+
+- If the user exists, the endpoint promotes it to `admin` and updates the password only when `password` is sent.
+- If the user does not exist, it creates the account as verified admin. In that case `name`, `phone`, `document`, and `password` are required.
+- Remove or rotate `ADMIN_BOOTSTRAP_KEY` after using it.
 
 ## Token validation
 

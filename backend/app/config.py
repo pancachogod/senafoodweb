@@ -51,6 +51,7 @@ class Settings:
         self.access_token_expire_minutes = int(
             os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440")
         )
+        self.admin_bootstrap_key = os.getenv("ADMIN_BOOTSTRAP_KEY", "")
         self.frontend_url = normalize_origin(
             os.getenv("FRONTEND_URL", "http://localhost:5173")
         )

@@ -35,6 +35,20 @@ class UserPublic(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class AdminBootstrapRequest(BaseModel):
+    email: EmailStr
+    password: str | None = Field(default=None, min_length=6)
+    name: str | None = None
+    phone: str | None = None
+    document: str | None = None
+
+
+class AdminBootstrapResponse(BaseModel):
+    status: str = "ok"
+    created: bool
+    user: UserPublic
+
+
 class RegisterResponse(BaseModel):
     user: UserPublic
     email_sent: bool = False
